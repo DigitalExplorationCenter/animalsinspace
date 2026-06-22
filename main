@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>270° Immersive Studio — Interactive Exhibit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --surface: #10101a;
+    --panel-bg: rgba(12, 12, 22, 0.92);
+    --accent: #c8a96e;
+    --accent2: #7b9cff;
+    --text: #e8e4dc;
+    --muted: #6b6878;
+    --border: rgba(200, 169, 110, 0.18);
+    --glow: rgba(123, 156, 255, 0.12);
+
+    /* Studio canvas — 13578 × 1200 px, 270° wrap */
+    --canvas-w: 13578px;
+    --canvas-h: 1200px;
+    --viewport-h: 100vh;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── CHROME ──────────────────────────────────────────── */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 36px;
+    background: linear-gradient(180deg, rgba(8,8,16,.96) 60%, transparent);
+    pointer-events: none;
+  }
+  #hud .studio-label {
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  #hud .studio-dims {
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: var(--muted);
+  }
+  #hud .studio-angle {
+    font-size: 11px;
+    letter-spacing: .14em;
+    color: var(--accent2);
+  }
+
+  /* ── MINIMAP ─────────────────────────────────────────── */
+  #minimap-wrap {
+    position: fixed;
+    bottom: 28px; right: 36px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  #minimap-label {
+    font-size: 9px;
+    letter-spacing: .18em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  #minimap {
+    width: 200px;
+    height: 22px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  #minimap-thumb {
+    position: absolute;
+    top: 2px; bottom: 2px;
+    background: rgba(200,169,110,.35);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    transition: left .08s, width .08s;
+  }
+  #minimap-dots {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    gap: 0;
+    pointer-events: none;
+  }
+  .mm-dot {
+    flex: 1;
+    height: 6px;
+    margin: 0 1px;
+    background: rgba(255,255,255,.07);
+    border-radius: 1px;
+  }
+
+  /* ── CONTROLS ────────────────────────────────────────── */
+  #controls {
+    position: fixed;
+    bottom: 28px; left: 36px;
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .ctrl-btn {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .ctrl-btn:hover { background: rgba(200,169,110,.14); border-color: var(--accent); }
+  #scroll-hint {
+    font-size: 10px;
+    letter-spacing: .14em;
+    color: var(--muted);
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  /* ── STUDIO VIEWPORT ─────────────────────────────────── */
+  #studio-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    cursor: grab;
+  }
+  #studio-viewport.dragging { cursor: grabbing; }
+
+  /* ── STUDIO CANVAS (13578 × 1200) ───────────────────── */
+  #studio-canvas {
+    width: var(--canvas-w);
+    height: var(--canvas-h);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(0);
+    will-change: transform;
+  }
+
+  /* Floor & ceiling gradient strips */
+  #studio-canvas::before,
+  #studio-canvas::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #studio-canvas::before {
+    top: 0; height: 90px;
+    background: linear-gradient(180deg, rgba(8,8,16,.9) 0%, transparent 100%);
+  }
+  #studio-canvas::after {
+    bottom: 0; height: 90px;
+    background: linear-gradient(0deg, rgba(8,8,16,.9) 0%, transparent 100%);
+  }
+
+  /* Studio background — subtle grid + gradient sky */
+  #studio-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg,
+        #0b0b18 0%,
+        #0d0d1e 45%,
+        #0a0a16 100%);
+    z-index: 0;
+  }
+  #studio-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(123,156,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(123,156,255,.04) 1px, transparent 1px);
+    background-size: 120px 120px;
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.5) 30%, rgba(0,0,0,.5) 70%, transparent 100%);
+  }
+
+  /* ── FLOOR LINE ──────────────────────────────────────── */
+  #floor-line {
+    position: absolute;
+    bottom: 80px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 10%, var(--accent) 90%, transparent 100%);
+    opacity: .25;
+    z-index: 1;
+  }
+
+  /* ── AMBIENT GLOW POOLS ──────────────────────────────── */
+  .glow-pool {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SECTION DIVIDERS ────────────────────────────────── */
+  .section-divider {
+    position: absolute;
+    top: 60px; bottom: 60px;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--border) 30%, var(--border) 70%, transparent);
+    z-index: 2;
+  }
+
+  /* ── EXHIBIT PANELS ──────────────────────────────────── */
+  .panel {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5);
+  }
+  .panel:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
+    transform: translateY(-4px);
+    z-index: 20;
+  }
+  .panel-img {
+    width: 100%;
+    flex: 1;
+    object-fit: cover;
+    display: block;
+    background: #1a1a2e;
+  }
+  /* Placeholder gradient images */
+  .panel-img-placeholder {
+    width: 100%;
+    flex: 1;
+    display: block;
+    min-height: 200px;
+  }
+  .panel-meta {
+    padding: 14px 16px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .panel-tag {
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .panel-sub {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── HERO BANNER ─────────────────────────────────────── */
+  #hero-banner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 5;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #hero-banner h1 {
+    font-size: clamp(28px, 3.5vw, 52px);
+    font-weight: 200;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--text);
+    opacity: .85;
+  }
+  #hero-banner p {
+    font-size: 11px;
+    letter-spacing: .22em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  /* ── OPENING GALLERY TITLE ───────────────────────────── */
+  #opening-title {
+    position: absolute;
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+  #opening-title .title-line1 {
+    font-family: 'Orbitron', 'Courier New', monospace;
+    font-size: 62px;
+    font-weight: 900;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #e8e4dc 0%, #c8a96e 45%, #7b9cff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    filter: drop-shadow(0 0 32px rgba(123,156,255,0.35));
+  }
+  #opening-title .title-line2 {
+    font-family: 'Orbitron', 'Courier New', monospace;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: .42em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 14px;
+    opacity: .9;
+    filter: drop-shadow(0 0 18px rgba(200,169,110,0.4));
+  }
+
+  /* ── SECTION LABELS ──────────────────────────────────── */
+  .section-label {
+    position: absolute;
+    top: 32px;
+    font-size: 9px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--muted);
+    z-index: 3;
+    transform: translateX(-50%);
+  }
+
+  /* ── LIGHTBOX ────────────────────────────────────────── */
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(6,6,12,.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+  }
+  #lightbox.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  #lightbox-inner {
+    max-width: 900px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  #lightbox-img-wrap {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #12121e;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #lightbox-img-wrap canvas {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  #lightbox-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  #lightbox-text .lb-tag {
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 8px;
+  }
+  #lightbox-text .lb-title {
+    font-size: 22px; font-weight: 300; letter-spacing: .06em; color: var(--text); margin-bottom: 6px;
+  }
+  #lightbox-text .lb-desc {
+    font-size: 13px; color: var(--muted); line-height: 1.65; max-width: 520px;
+  }
+  #lb-close {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+  #lb-close:hover { background: rgba(200,169,110,.15); }
+
+  /* ── UPLOAD ZONE ─────────────────────────────────────── */
+  #upload-fab {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  #upload-btn {
+    padding: 10px 22px;
+    background: rgba(200,169,110,.1);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  #upload-btn:hover { background: rgba(200,169,110,.22); }
+  #file-input { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="studio-label">270° Immersive Studio</div>
+  <div class="studio-dims">13578 × 1200 px</div>
+  <div class="studio-angle" id="angle-readout">0°</div>
+</div>
+
+<!-- MINIMAP -->
+<div id="minimap-wrap">
+  <div id="minimap-label">Studio Overview</div>
+  <div id="minimap">
+    <div id="minimap-dots"></div>
+    <div id="minimap-thumb"></div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div id="controls">
+  <button class="ctrl-btn" id="btn-left" title="Scroll left">&#8592;</button>
+  <button class="ctrl-btn" id="btn-right" title="Scroll right">&#8594;</button>
+  <span id="scroll-hint">Drag · Scroll · Arrow Keys</span>
+</div>
+
+<!-- UPLOAD -->
+<div id="upload-fab">
+  <button id="upload-btn">⊕ Add Images to Exhibit</button>
+  <input type="file" id="file-input" accept="image/*" multiple>
+</div>
+
+<!-- STUDIO VIEWPORT -->
+<div id="studio-viewport">
+  <div id="studio-canvas">
+    <div id="studio-bg"></div>
+    <div id="floor-line"></div>
+    <!-- Ambient glows injected by JS -->
+    <!-- Section dividers injected by JS -->
+    <!-- Panels injected by JS -->
+    <div id="hero-banner">
+      <h1>Interactive Exhibit</h1>
+      <p>270° Immersive Studio · Explore the Collection</p>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <div id="lightbox-inner">
+    <div id="lightbox-img-wrap">
+      <canvas id="lb-canvas" width="900" height="506"></canvas>
+    </div>
+    <div id="lightbox-body">
+      <div id="lightbox-text">
+        <div class="lb-tag" id="lb-tag"></div>
+        <div class="lb-title" id="lb-title"></div>
+        <div class="lb-desc" id="lb-desc"></div>
+      </div>
+      <button id="lb-close">✕</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIGURATION
+═══════════════════════════════════════════════════════ */
+const CANVAS_W = 13578;
+const CANVAS_H = 1200;
+const DEGREES  = 270;
+
+/* Placeholder exhibit data — replace image srcs with real URLs */
+const EXHIBIT_DATA = [
+  // SECTION 2 — Material Studies
+  { section:'Material Studies', tag:'Surface', title:'Oxidized Field', desc:'Corrosion as aesthetic — iron, copper and time conspiring to produce unrepeatable texture.', x:1780, y:250, w:300, h:380, hue:[25,45] },
+  { section:'Material Studies', tag:'Surface', title:'Grain Memory', desc:'The wood holds the record of every season — a biography in cross-section.', x:2120, y:200, w:420, h:480, hue:[35,55] },
+  { section:'Material Studies', tag:'Texture', title:'Micro Atlas', desc:'Magnified to the point of abstraction — the familiar made alien at 200×.', x:2590, y:270, w:310, h:360, hue:[190,230] },
+  { section:'Material Studies', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:2940, y:220, w:360, h:420, hue:[60,90] },
+
+  // SECTION 3 — Architectures
+  { section:'Architectures', tag:'Space', title:'Void / Volume', desc:'The negative space within brutalist shells — silence as structural element.', x:3560, y:180, w:440, h:500, hue:[200,240] },
+  { section:'Architectures', tag:'Space', title:'Repetition Engine', desc:'Seriality as monument — when the unit multiplied becomes something else entirely.', x:4050, y:260, w:320, h:380, hue:[250,290] },
+  { section:'Architectures', tag:'Light', title:'Fenestration Study', desc:'A systematic survey of aperture — 48 windows, 48 qualities of entering light.', x:4420, y:200, w:380, h:450, hue:[40,70] },
+
+  // SECTION 4 — Motion & Time
+  { section:'Motion & Time', tag:'Sequence', title:'Frame 0001–2400', desc:'Long-exposure astronomy collapsed into a single plane — motion as material.', x:5060, y:240, w:500, h:460, hue:[220,250] },
+  { section:'Motion & Time', tag:'Blur', title:'Velocity Portrait', desc:'Identity stripped to direction — the subject becomes a vector rather than a face.', x:5610, y:200, w:340, h:440, hue:[280,320] },
+  { section:'Motion & Time', tag:'Interval', title:'Between Seconds', desc:'High-speed capture of the moment physics turns counterintuitive.', x:6000, y:270, w:300, h:360, hue:[160,200] },
+
+  // SECTION 5 — Colour Field
+  { section:'Colour Field', tag:'Spectrum', title:'Residue', desc:'Pigment left behind after the painting was finished — the ghost of intent.', x:6560, y:200, w:380, h:480, hue:[330,360] },
+  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 7', desc:'A single hue pushed through 48 tonal steps from near-white to near-black.', x:6990, y:240, w:320, h:400, hue:[120,160] },
+  { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'Horizon as colour theory — the sky at dusk as an unrepeatable palette.', x:7360, y:180, w:460, h:500, hue:[30,60] },
+
+  // SECTION 6 — Figures
+  { section:'Figures', tag:'Portrait', title:'Presence / Absence', desc:'The sitter has left; only the impression in light remains.', x:8080, y:220, w:360, h:460, hue:[200,230] },
+  { section:'Figures', tag:'Form', title:'Silhouette Archive', desc:'Two thousand silhouettes collected over a decade — the body as universal shape.', x:8490, y:260, w:300, h:380, hue:[260,300] },
+  { section:'Figures', tag:'Portrait', title:'Gesture Language', desc:'Eleven seconds of gesture, crystallised — meaning without words.', x:8840, y:190, w:400, h:470, hue:[40,75] },
+
+  // SECTION 7 — Landscape
+  { section:'Landscape', tag:'Geography', title:'Watershed', desc:'The ridge where water must decide which ocean to reach.', x:9500, y:200, w:480, h:500, hue:[180,220] },
+  { section:'Landscape', tag:'Scale', title:'Aerial Survey', desc:'The land read as pure form — geology indifferent to human navigation.', x:10030, y:250, w:360, h:420, hue:[100,140] },
+  { section:'Landscape', tag:'Weather', title:'Pressure Front', desc:'The moment the atmosphere changes its mind about what the day will become.', x:10440, y:190, w:420, h:480, hue:[220,260] },
+
+  // SECTION 8 — Archive
+  { section:'The Archive', tag:'Document', title:'Inventory #0442', desc:'Catalogued between the objects themselves — provenance as aesthetic object.', x:11120, y:230, w:340, h:420, hue:[40,65] },
+  { section:'The Archive', tag:'Document', title:'Found Film', desc:'Twenty-seven frames from an undeveloped roll — 1973, location unknown.', x:11510, y:270, w:300, h:360, hue:[35,55] },
+  { section:'The Archive', tag:'Print', title:'Edition of One', desc:'A proof marked 0/1 — the version before the edition, before the edition\'s idea.', x:11860, y:200, w:400, h:460, hue:[260,300] },
+
+  // SECTION 9 — Closing
+  { section:'Closing Room', tag:'Coda', title:'Afterimage', desc:'What persists when you close your eyes — the retina\'s own exhibition.', x:12580, y:240, w:360, h:420, hue:[330,360] },
+  { section:'Closing Room', tag:'Coda', title:'Return', desc:'Every exit from the studio leaves a trace. This is the record of departures.', x:12990, y:200, w:420, h:480, hue:[220,255] },
+];
+
+/* ═══════════════════════════════════════════════════════
+   PLACEHOLDER IMAGE GENERATOR
+═══════════════════════════════════════════════════════ */
+function makePlaceholderCanvas(w, h, hueRange, title) {
+  const c = document.createElement('canvas');
+  c.width = w * 2; c.height = h * 2;
+  c.style.width = '100%'; c.style.height = '100%';
+  const ctx = c.getContext('2d');
+  const [h1, h2] = hueRange;
+
+  // gradient background
+  const g = ctx.createLinearGradient(0, 0, c.width, c.height);
+  g.addColorStop(0, `hsl(${h1},40%,10%)`);
+  g.addColorStop(.5, `hsl(${(h1+h2)/2},55%,16%)`);
+  g.addColorStop(1, `hsl(${h2},45%,8%)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // noise overlay
+  for (let i = 0; i < 3000; i++) {
+    const x = Math.random() * c.width, y = Math.random() * c.height;
+    const a = Math.random() * .06;
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fillRect(x, y, 1, 1);
+  }
+
+  // geometric accent
+  ctx.save();
+  ctx.globalAlpha = .12;
+  ctx.strokeStyle = `hsl(${h1},70%,70%)`;
+  ctx.lineWidth = 1;
+  const cx = c.width/2, cy = c.height/2;
+  for (let r = 30; r < Math.max(c.width,c.height); r += 60) {
+    ctx.beginPath();
+    ctx.arc(cx + (Math.random()-.5)*80, cy + (Math.random()-.5)*80, r, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // subtle label
+  ctx.save();
+  ctx.globalAlpha = .18;
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.min(w,h)*0.08}px Helvetica Neue, Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(title.toUpperCase(), cx, cy);
+  ctx.restore();
+
+  return c;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD STUDIO
+═══════════════════════════════════════════════════════ */
+const studioCanvas = document.getElementById('studio-canvas');
+
+// Ambient glow pools
+const glowDefs = [
+  { x:1200, y:600, r:500, color:'rgba(123,156,255,0.07)' },
+  { x:3400, y:800, r:600, color:'rgba(200,169,110,0.06)' },
+  { x:5500, y:400, r:700, color:'rgba(180,100,200,0.05)' },
+  { x:7200, y:700, r:550, color:'rgba(80,200,150,0.05)' },
+  { x:9000, y:500, r:650, color:'rgba(123,156,255,0.06)' },
+  { x:11000,y:600, r:600, color:'rgba(200,169,110,0.05)' },
+  { x:13000,y:700, r:500, color:'rgba(180,100,200,0.06)' },
+];
+glowDefs.forEach(g => {
+  const el = document.createElement('div');
+  el.className = 'glow-pool';
+  el.style.cssText = `left:${g.x-g.r}px;top:${g.y-g.r}px;width:${g.r*2}px;height:${g.r*2}px;background:${g.color};`;
+  studioCanvas.appendChild(el);
+});
+
+// Opening Gallery title (no panels — title fills the space)
+const OG_LEFT = 200;
+const OG_RIGHT = 1560;
+const OG_CENTER_X = (OG_LEFT + OG_RIGHT) / 2;
+const titleEl = document.createElement('div');
+titleEl.id = 'opening-title';
+titleEl.style.left = OG_CENTER_X + 'px';
+titleEl.style.top = '50%';
+titleEl.style.transform = 'translate(-50%, -50%)';
+titleEl.innerHTML = `
+  <div class="title-line1">Ad Astra Fur Aspera</div>
+  <div class="title-line2">Animals in Space</div>
+`;
+studioCanvas.appendChild(titleEl);
+
+// Opening Gallery section label
+const ogLbl = document.createElement('div');
+ogLbl.className = 'section-label';
+ogLbl.textContent = 'Opening Gallery';
+ogLbl.style.left = OG_CENTER_X + 'px';
+studioCanvas.appendChild(ogLbl);
+
+// Opening Gallery closing divider
+const ogDiv = document.createElement('div');
+ogDiv.className = 'section-divider';
+ogDiv.style.left = OG_RIGHT + 'px';
+studioCanvas.appendChild(ogDiv);
+
+// Section dividers & labels
+const sections = [...new Set(EXHIBIT_DATA.map(d => d.section))];
+const sectionBounds = {};
+EXHIBIT_DATA.forEach(d => {
+  if (!sectionBounds[d.section]) sectionBounds[d.section] = { min: Infinity, max: -Infinity };
+  sectionBounds[d.section].min = Math.min(sectionBounds[d.section].min, d.x);
+  sectionBounds[d.section].max = Math.max(sectionBounds[d.section].max, d.x + d.w);
+});
+
+Object.entries(sectionBounds).forEach(([name, bounds], i) => {
+  if (i > 0) {
+    const div = document.createElement('div');
+    div.className = 'section-divider';
+    div.style.left = bounds.min - 40 + 'px';
+    studioCanvas.appendChild(div);
+  }
+  const lbl = document.createElement('div');
+  lbl.className = 'section-label';
+  lbl.textContent = name;
+  lbl.style.left = (bounds.min + (bounds.max - bounds.min)/2) + 'px';
+  studioCanvas.appendChild(lbl);
+});
+
+// Minimap dots
+const mmDots = document.getElementById('minimap-dots');
+sections.forEach(() => {
+  const d = document.createElement('div');
+  d.className = 'mm-dot';
+  mmDots.appendChild(d);
+});
+
+// Panels
+const panels = [];
+EXHIBIT_DATA.forEach((item, idx) => {
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
+
+  const ph = makePlaceholderCanvas(item.w, item.h - 80, item.hue, item.title);
+  ph.className = 'panel-img-placeholder';
+  panel.appendChild(ph);
+
+  const meta = document.createElement('div');
+  meta.className = 'panel-meta';
+  meta.innerHTML = `<div class="panel-tag">${item.tag}</div><div class="panel-title">${item.title}</div><div class="panel-sub">${item.desc}</div>`;
+  panel.appendChild(meta);
+
+  panel.addEventListener('click', () => openLightbox(item, ph));
+  studioCanvas.appendChild(panel);
+  panels.push(panel);
+});
+
+/* ═══════════════════════════════════════════════════════
+   PANNING / SCROLLING
+═══════════════════════════════════════════════════════ */
+const viewport = document.getElementById('studio-viewport');
+let scrollX = 0;
+const maxScroll = CANVAS_W - window.innerWidth;
+const thumbEl = document.getElementById('minimap-thumb');
+const angleEl = document.getElementById('angle-readout');
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function applyScroll() {
+  scrollX = clamp(scrollX, 0, maxScroll);
+  studioCanvas.style.transform = `translateY(-50%) translateX(${-scrollX}px)`;
+  // minimap
+  const ratio = scrollX / maxScroll;
+  const thumbW = (window.innerWidth / CANVAS_W) * 200;
+  thumbEl.style.width = thumbW + 'px';
+  thumbEl.style.left = ratio * (200 - thumbW) + 'px';
+  // angle
+  const deg = Math.round((scrollX / maxScroll) * DEGREES);
+  angleEl.textContent = deg + '°';
+}
+applyScroll();
+
+// Mouse drag
+let isDragging = false, dragStartX = 0, dragStartScroll = 0;
+viewport.addEventListener('mousedown', e => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartScroll = scrollX;
+  viewport.classList.add('dragging');
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  scrollX = dragStartScroll - (e.clientX - dragStartX);
+  applyScroll();
+});
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  viewport.classList.remove('dragging');
+});
+
+// Touch
+let touchStartX = 0, touchStartScroll = 0;
+viewport.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartScroll = scrollX;
+});
+viewport.addEventListener('touchmove', e => {
+  scrollX = touchStartScroll - (e.touches[0].clientX - touchStartX);
+  applyScroll();
+  e.preventDefault();
+}, { passive: false });
+
+// Wheel
+viewport.addEventListener('wheel', e => {
+  scrollX += e.deltaY + e.deltaX;
+  applyScroll();
+  e.preventDefault();
+}, { passive: false });
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  scrollX -= 120;
+  if (e.key === 'ArrowRight') scrollX += 120;
+  if (e.key === 'Escape') closeLightbox();
+  applyScroll();
+});
+
+// Buttons
+document.getElementById('btn-left').addEventListener('click', () => { scrollX -= 400; applyScroll(); });
+document.getElementById('btn-right').addEventListener('click', () => { scrollX += 400; applyScroll(); });
+
+/* ═══════════════════════════════════════════════════════
+   LIGHTBOX
+═══════════════════════════════════════════════════════ */
+const lightbox = document.getElementById('lightbox');
+let activeSrc = null;
+
+function openLightbox(item, srcCanvas) {
+  document.getElementById('lb-tag').textContent = item.tag;
+  document.getElementById('lb-title').textContent = item.title;
+  document.getElementById('lb-desc').textContent = item.desc;
+  const lbC = document.getElementById('lb-canvas');
+  const ctx = lbC.getContext('2d');
+  ctx.clearRect(0, 0, lbC.width, lbC.height);
+  ctx.drawImage(srcCanvas, 0, 0, lbC.width, lbC.height);
+  lightbox.classList.add('open');
+}
+
+function closeLightbox() {
+  lightbox.classList.remove('open');
+}
+
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+/* ═══════════════════════════════════════════════════════
+   IMAGE UPLOAD
+═══════════════════════════════════════════════════════ */
+document.getElementById('upload-btn').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', function() {
+  Array.from(this.files).forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        // Place new panel at end of canvas
+        const x = 13000 + i * 440;
+        const w = 380, h = 480;
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.style.cssText = `left:${x}px;top:180px;width:${w}px;height:${h}px;`;
+        const imgEl = document.createElement('img');
+        imgEl.className = 'panel-img';
+        imgEl.src = ev.target.result;
+        imgEl.style.height = (h - 80) + 'px';
+        panel.appendChild(imgEl);
+        const meta = document.createElement('div');
+        meta.className = 'panel-meta';
+        meta.innerHTML = `<div class="panel-tag">Uploaded</div><div class="panel-title">${file.name.replace(/\.[^.]+$/, '')}</div><div class="panel-sub">User contributed work</div>`;
+        panel.appendChild(meta);
+        panel.addEventListener('click', () => {
+          document.getElementById('lb-tag').textContent = 'Uploaded';
+          document.getElementById('lb-title').textContent = file.name;
+          document.getElementById('lb-desc').textContent = 'User contributed image.';
+          const lbC = document.getElementById('lb-canvas');
+          const ctx = lbC.getContext('2d');
+          ctx.clearRect(0,0,lbC.width,lbC.height);
+          // draw to fit
+          const scale = Math.min(lbC.width/img.width, lbC.height/img.height);
+          const sw = img.width*scale, sh = img.height*scale;
+          ctx.drawImage(img, (lbC.width-sw)/2, (lbC.height-sh)/2, sw, sh);
+          lightbox.classList.add('open');
+        });
+        studioCanvas.appendChild(panel);
+        // scroll to it
+        scrollX = Math.max(0, x - window.innerWidth/2);
+        applyScroll();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  this.value = '';
+});
+</script>
+</body>
+</html>
