@@ -731,6 +731,23 @@ sections.forEach(() => {
 // Panels
 const panels = [];
 EXHIBIT_DATA.forEach((item, idx) => {
+
+  if (item.textOnly) {
+    /* ── TEXT-ONLY PANEL ── */
+    const panel = document.createElement('div');
+    panel.className = 'panel-text';
+    panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
+    panel.innerHTML = `
+      <div class="panel-tag">${item.tag}</div>
+      <div class="panel-title">${item.title}</div>
+      <div class="text-rule"></div>
+      <div class="panel-sub">${item.desc}</div>
+    `;
+    studioCanvas.appendChild(panel);
+    panels.push(panel);
+
+  } else {
+    /* ── STANDARD IMAGE PANEL ── */
   const panel = document.createElement('div');
   panel.className = 'panel';
   panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
