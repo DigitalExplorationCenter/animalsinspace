@@ -317,6 +317,29 @@
     margin-top: 10px;
   }
 
+  /* ── TEXT-ONLY PANEL ─────────────────────────────────── */
+  .panel-text {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 36px 32px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .panel-text:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
+  }
+  .panel-text .panel-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:14px; }
+  .panel-text .panel-title { font-size:22px; font-weight:600; color:var(--text); line-height:1.25; margin-bottom:18px; }
+  .panel-text .panel-sub   { font-size:13px; color:var(--muted); line-height:1.75; }
+  .panel-text .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin: 20px 0; }
+  
   /* ── OPENING GALLERY TITLE ───────────────────────────── */
   #opening-title {
     position: absolute;
@@ -499,8 +522,6 @@
     <!-- Section dividers injected by JS -->
     <!-- Panels injected by JS -->
     <div id="hero-banner">
-      <h1>Interactive Exhibit</h1>
-      <p>270° Immersive Studio · Explore the Collection</p>
     </div>
   </div>
 </div>
