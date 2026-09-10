@@ -285,7 +285,7 @@
     margin-bottom: 4px;
   }
   .panel-sub {
-    font-size: 9px;
+    font-size: 11px;
     color: var(--muted);
     line-height: 1.5;
   }
@@ -330,7 +330,10 @@
     border-radius: 2px;
     box-shadow: 0 8px 40px rgba(0,0,0,.5);
     transition: border-color .2s, box-shadow .2s;
+    width: auto !important;
     height: auto !important;
+    max-width: 600px;
+    min-width: 280px;
   }
   .panel-text:hover {
     border-color: var(--accent);
@@ -573,10 +576,10 @@ const EXHIBIT_DATA = [
   { section:'Motion & Time', tag:'Interval', title:'Between Seconds', desc:'High-speed capture of the moment physics turns counterintuitive.', x:6000, y:270, w:300, h:360, hue:[160,200] },
 
   // SECTION 5 — Colour Field
-  { section:'Colour Field', tag:'The First Cat in Space', title:'Félicette (France)', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and “appropriate” weight, Félicette was launched into space at the Centre Interarmées D'essais D'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity.  After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat. Félicette’s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth’s first, and so far only, cat astronaut.', x:6560, y:200, w:600, hue:[330,360], textOnly:true },
-  { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'Horizon as colour theory — the sky at dusk as an unrepeatable palette.', x:6960, y:200, w:520, h:480, hue:[30,60] },
-  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 7', desc:'A single hue pushed through 48 tonal steps from near-white to near-black.', x:7440, y:200, w:320, h:400, hue:[120,160] },
-  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 8', desc:'A companion study — the inverse progression, tracing absence back to presence.', x:7440, y:620, w:320, h:400, hue:[140,180] },
+  { section:'Colour Field', tag:'Spectrum', title:'Residue', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful, and France moved on to other animals for spaceflight testing. The remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth\'s first, and so far only, cat astronaut.', x:6560, y:200, hue:[330,360], textOnly:true },
+  { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'Horizon as colour theory — the sky at dusk as an unrepeatable palette.', anchoredTo:'Residue', gap:20, relY:200, w:460, h:480, hue:[30,60] },
+  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 7', desc:'A single hue pushed through 48 tonal steps from near-white to near-black.', anchoredTo:'Atmospheric Band', gap:20, relY:200, w:320, h:400, hue:[120,160] },
+  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 8', desc:'A companion study — the inverse progression, tracing absence back to presence.', anchoredTo:'Saturation Study 7', gap:0, relY:620, sameXAs:'Saturation Study 7', w:320, h:400, hue:[140,180] },
 
   // SECTION 6 — Figures
   { section:'Figures', tag:'Portrait', title:'Presence / Absence', desc:'The sitter has left; only the impression in light remains.', x:8080, y:220, w:360, h:460, hue:[200,230] },
@@ -733,13 +736,15 @@ sections.forEach(() => {
 
 // Panels
 const panels = [];
+const panelEls = {}; // title → DOM element map for anchoring
+
 EXHIBIT_DATA.forEach((item, idx) => {
 
   if (item.textOnly) {
     /* ── TEXT-ONLY PANEL ── */
     const panel = document.createElement('div');
     panel.className = 'panel-text';
-    panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;`;
+    panel.style.cssText = `left:${item.x}px;top:${item.y}px;`;
     panel.innerHTML = `
       <div class="panel-tag">${item.tag}</div>
       <div class="panel-title">${item.title}</div>
@@ -748,6 +753,27 @@ EXHIBIT_DATA.forEach((item, idx) => {
     `;
     studioCanvas.appendChild(panel);
     panels.push(panel);
+    panelEls[item.title] = { el: panel, item };
+
+  } else if (item.anchoredTo) {
+    /* ── ANCHORED PANEL (position set after render) ── */
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.style.cssText = `left:0px;top:${item.relY}px;width:${item.w}px;height:${item.h}px;visibility:hidden;`;
+
+    const ph = makePlaceholderCanvas(item.w, item.h - 80, item.hue, item.title);
+    ph.className = 'panel-img-placeholder';
+    panel.appendChild(ph);
+
+    const meta = document.createElement('div');
+    meta.className = 'panel-meta';
+    meta.innerHTML = `<div class="panel-tag">${item.tag}</div><div class="panel-title">${item.title}</div><div class="panel-sub">${item.desc}</div>`;
+    panel.appendChild(meta);
+
+    panel.addEventListener('click', () => openLightbox(item, ph));
+    studioCanvas.appendChild(panel);
+    panels.push(panel);
+    panelEls[item.title] = { el: panel, item };
 
   } else {
     /* ── STANDARD IMAGE PANEL ── */
@@ -767,6 +793,65 @@ EXHIBIT_DATA.forEach((item, idx) => {
     panel.addEventListener('click', () => openLightbox(item, ph));
     studioCanvas.appendChild(panel);
     panels.push(panel);
+    panelEls[item.title] = { el: panel, item };
+  }
+});
+
+/* ── ANCHOR POSITIONING ─────────────────────────────── */
+// Compute left position for an anchored panel by walking the anchor chain
+function resolveAnchorX(title) {
+  const entry = panelEls[title];
+  if (!entry) return 0;
+  const { el, item } = entry;
+  if (item.textOnly) {
+    return item.x + el.getBoundingClientRect().width; // text panel: anchor x + rendered width
+  }
+  if (item.anchoredTo) {
+    return resolveAnchorX(item.anchoredTo) + (item.gap || 0) + item.w;
+  }
+  return item.x + item.w;
+}
+
+function repositionAnchored() {
+  EXHIBIT_DATA.forEach(item => {
+    if (!item.anchoredTo) return;
+    const entry = panelEls[item.title];
+    if (!entry) return;
+
+    // Special case: Saturation Study 8 shares X with Saturation Study 7
+    if (item.sameXAs) {
+      const refEntry = panelEls[item.sameXAs];
+      if (refEntry) {
+        const refLeft = parseFloat(refEntry.el.style.left);
+        entry.el.style.left = refLeft + 'px';
+        entry.el.style.visibility = 'visible';
+        return;
+      }
+    }
+
+    // Walk anchor chain to find left edge of anchor, then place after it
+    const anchorEntry = panelEls[item.anchoredTo];
+    if (!anchorEntry) return;
+    const anchorEl = anchorEntry.el;
+    const anchorLeft = parseFloat(anchorEl.style.left);
+    const anchorW = anchorEntry.item.textOnly
+      ? anchorEl.offsetWidth
+      : anchorEntry.item.w;
+    const newLeft = anchorLeft + anchorW + (item.gap || 0);
+    entry.el.style.left = newLeft + 'px';
+    entry.el.style.visibility = 'visible';
+  });
+}
+
+// Run once after layout, then watch the text panel for resize
+requestAnimationFrame(() => {
+  repositionAnchored();
+
+  // Watch the Residue text panel for size changes
+  const residueEntry = panelEls['Residue'];
+  if (residueEntry && window.ResizeObserver) {
+    const ro = new ResizeObserver(() => repositionAnchored());
+    ro.observe(residueEntry.el);
   }
 });
 
@@ -923,4 +1008,3 @@ document.getElementById('file-input').addEventListener('change', function() {
 </script>
 </body>
 </html>
-
