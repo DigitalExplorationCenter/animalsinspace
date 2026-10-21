@@ -137,13 +137,7 @@
     transition: background .15s, border-color .15s;
   }
   .ctrl-btn:hover { background: rgba(200,169,110,.14); border-color: var(--accent); }
-  #scroll-hint {
-    font-size: 10px;
-    letter-spacing: .14em;
-    color: var(--muted);
-    text-transform: uppercase;
-    user-select: none;
-  }
+
 
   /* ── STUDIO VIEWPORT ─────────────────────────────────── */
   #studio-viewport {
@@ -454,7 +448,7 @@
     transform: translateY(-4px);
     z-index: 20;
   }
-  .archive-cell-img { width:100%; height:200px; display:block; flex-shrink:0; }
+  .archive-cell-img { width:100%; aspect-ratio:3/2; height:auto; display:block; flex-shrink:0; object-fit:cover; }
   .archive-cell-meta { padding: 14px 16px 16px; border-top: 1px solid var(--border); }
   .archive-cell-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:6px; }
   .archive-cell-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:4px; }
@@ -590,32 +584,7 @@
   }
   #lb-close:hover { background: rgba(200,169,110,.15); }
 
-  /* ── UPLOAD ZONE ─────────────────────────────────────── */
-  #upload-fab {
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  #upload-btn {
-    padding: 10px 22px;
-    background: rgba(200,169,110,.1);
-    border: 1px solid var(--accent);
-    border-radius: 2px;
-    color: var(--accent);
-    font-size: 11px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background .15s;
-    white-space: nowrap;
-  }
-  #upload-btn:hover { background: rgba(200,169,110,.22); }
-  #file-input { display: none; }
+
 </style>
 </head>
 <body>
@@ -640,13 +609,6 @@
 <div id="controls">
   <button class="ctrl-btn" id="btn-left" title="Scroll left">&#8592;</button>
   <button class="ctrl-btn" id="btn-right" title="Scroll right">&#8594;</button>
-  <span id="scroll-hint">Drag · Scroll · Arrow Keys</span>
-</div>
-
-<!-- UPLOAD -->
-<div id="upload-fab">
-  <button id="upload-btn">⊕ Add Images to Exhibit</button>
-  <input type="file" id="file-input" accept="image/*" multiple>
 </div>
 
 <!-- STUDIO VIEWPORT -->
@@ -742,8 +704,8 @@ const EXHIBIT_DATA = [
   { section:'The Archive', tag:'Document', title:'Archive Title', desc:'', x:8516, y:200, hue:[40,65], textOnly:true, archiveTitle:true },
   { section:'The Archive', gridSection:true, x:8516, anchoredToArchiveTitle:true, gap:20,
     items:[
-      { tag:'Document', title:'Inventory #0442',  desc:'Catalogued between the objects themselves — provenance as aesthetic object.', hue:[40,65], imgSrc:'' },
-      { tag:'Document', title:'Found Film',        desc:'Twenty-seven frames from an undeveloped roll — 1973, location unknown.', hue:[35,55], imgSrc:'images/imagine_dragons_monkey.jpg' },
+      { tag:'Document', title:'Inventory #0442',  desc:'Catalogued between the objects themselves — provenance as aesthetic object.', hue:[40,65], imgSrc:'image/cosmo_guardians.webp' },
+      { tag:'Document', title:'Found Film',        desc:'Twenty-seven frames from an undeveloped roll — 1973, location unknown.', hue:[35,55], imgSrc:'image/imagine_dragons_monkey.jpg' },
       { tag:'Print',    title:'Edition of One',    desc:'A proof marked 0/1 — the version before the edition, before the edition\'s idea.', hue:[260,300], imgSrc:'' },
       { tag:'Document', title:'Field Notes',       desc:'Handwritten observations collected over thirty years in the field — a private cartography.', hue:[50,75], imgSrc:'' },
       { tag:'Archive',  title:'Dispatch #19',      desc:'A telegram sent but never received — the message preserved in transit forever.', hue:[200,230], imgSrc:'' },
@@ -864,7 +826,6 @@ const OG_CENTER_X = (OG_LEFT + OG_RIGHT) / 2;
 const titleEl = document.createElement('div');
 titleEl.id = 'opening-title';
 titleEl.style.left = OG_CENTER_X + 'px';
-titleEl.style.top = '20%';
 titleEl.innerHTML = `
   <div class="title-line1">Ad Astra Fur Aspera</div>
   <div class="title-line2">Animals in Space</div>
@@ -950,7 +911,10 @@ EXHIBIT_DATA.forEach((item, idx) => {
       const cellEl = document.createElement('div');
       cellEl.className = 'archive-cell';
 
-      const ph = makeImageFromCell(280, 200, cell, 'archive-cell-img');
+      const ph = makeImageFromCell(280, 187, cell, 'archive-cell-img');
+      ph.style.width = '100%';
+      ph.style.height = 'auto';
+      ph.style.aspectRatio = '3/2';
       cellEl.appendChild(ph);
 
       const meta = document.createElement('div');
@@ -1122,7 +1086,7 @@ function repositionAnchored() {
     // Row 2 gets remaining height after gap.
     const GAP      = 16;
     const META_H   = 78; // tag + title + desc padding ≈ 78px
-    const imgH_row1 = Math.max(80, Math.floor((titleH - GAP - META_H * 2) / 2));
+    const imgH_row1 = 187; // fixed 3:2 ratio at 280px width
     const imgH_row2 = imgH_row1; // keep symmetrical
 
     const cells = archiveGridEl.querySelectorAll('.archive-cell');
@@ -1275,58 +1239,7 @@ function closeLightbox() {
 document.getElementById('lb-close').addEventListener('click', closeLightbox);
 lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
 
-/* ═══════════════════════════════════════════════════════
-   IMAGE UPLOAD
-═══════════════════════════════════════════════════════ */
-document.getElementById('upload-btn').addEventListener('click', () => {
-  document.getElementById('file-input').click();
-});
 
-document.getElementById('file-input').addEventListener('change', function() {
-  Array.from(this.files).forEach((file, i) => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        // Place new panel at end of canvas
-        const x = 13000 + i * 440;
-        const w = 380, h = 480;
-        const panel = document.createElement('div');
-        panel.className = 'panel';
-        panel.style.cssText = `left:${x}px;top:180px;width:${w}px;height:${h}px;`;
-        const imgEl = document.createElement('img');
-        imgEl.className = 'panel-img';
-        imgEl.src = ev.target.result;
-        imgEl.style.height = (h - 80) + 'px';
-        panel.appendChild(imgEl);
-        const meta = document.createElement('div');
-        meta.className = 'panel-meta';
-        meta.innerHTML = `<div class="panel-tag">Uploaded</div><div class="panel-title">${file.name.replace(/\.[^.]+$/, '')}</div><div class="panel-sub">User contributed work</div>`;
-        panel.appendChild(meta);
-        panel.addEventListener('click', () => {
-          document.getElementById('lb-tag').textContent = 'Uploaded';
-          document.getElementById('lb-title').textContent = file.name;
-          document.getElementById('lb-desc').textContent = 'User contributed image.';
-          const lbC = document.getElementById('lb-canvas');
-          const ctx = lbC.getContext('2d');
-          ctx.clearRect(0,0,lbC.width,lbC.height);
-          // draw to fit
-          const scale = Math.min(lbC.width/img.width, lbC.height/img.height);
-          const sw = img.width*scale, sh = img.height*scale;
-          ctx.drawImage(img, (lbC.width-sw)/2, (lbC.height-sh)/2, sw, sh);
-          lightbox.classList.add('open');
-        });
-        studioCanvas.appendChild(panel);
-        // scroll to it
-        scrollX = Math.max(0, x - window.innerWidth/2);
-        applyScroll();
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-  this.value = '';
-});
 </script>
 </body>
 </html>
