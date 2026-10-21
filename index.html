@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>270° Immersive Studio — Interactive Exhibit</title>
+<title>270° Immersive Studio — 12312 × 1080</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
@@ -19,9 +19,9 @@
     --border: rgba(200, 169, 110, 0.18);
     --glow: rgba(123, 156, 255, 0.12);
 
-    /* Studio canvas — 13578 × 1200 px, 270° wrap */
-    --canvas-w: 13578px;
-    --canvas-h: 1200px;
+    /* Studio canvas — 12312 × 1080 px, 270° wrap */
+    --canvas-w: 12312px;
+    --canvas-h: 1080px;
     --viewport-h: 100vh;
   }
 
@@ -286,7 +286,7 @@
   }
   .panel-sub {
     font-size: 11px;
-    color: var(--muted);
+    color: var(--text);
     line-height: 1.5;
   }
 
@@ -341,8 +341,64 @@
   }
   .panel-text .panel-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:14px; }
   .panel-text .panel-title { font-size:22px; font-weight:600; color:var(--text); line-height:1.25; margin-bottom:18px; }
-  .panel-text .panel-sub   { font-size:13px; color:var(--muted); line-height:1.75; }
+  .panel-text .panel-sub   { font-size:13px; color:var(--text); line-height:1.75; }
   .panel-text .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin: 20px 0; }
+
+  /* ── 2×2 QUAD IMAGE GRID ─────────────────────────────── */
+  .quad-grid {
+    position: absolute;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(2, var(--cell-size, 220px));
+    grid-template-rows: repeat(2, auto);
+    gap: 12px;
+    visibility: hidden;
+  }
+  .quad-cell {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color .2s, transform .2s, box-shadow .2s;
+    background: var(--panel-bg);
+    overflow: hidden;
+  }
+  .quad-cell:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(200,169,110,.15);
+    z-index: 20;
+  }
+  .quad-cell-img {
+    width: 100%;
+    height: var(--cell-size, 220px);
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+  }
+  .quad-cell canvas.quad-cell-img {
+    width: 100% !important;
+    height: var(--cell-size, 220px) !important;
+  }
+  .quad-cell-meta {
+    padding: 10px 12px 14px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .quad-cell-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .quad-cell-desc {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.5;
+    opacity: .8;
+  }
 
   /* ── ARCHIVE TITLE PANEL ─────────────────────────────── */
   .panel-archive-title {
@@ -368,7 +424,7 @@
   }
   .panel-archive-title .panel-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:14px; }
   .panel-archive-title .panel-title { font-size:22px; font-weight:600; color:var(--text); line-height:1.25; margin-bottom:18px; }
-  .panel-archive-title .panel-sub   { font-size:13px; color:var(--muted); line-height:1.75; }
+  .panel-archive-title .panel-sub   { font-size:13px; color:var(--text); line-height:1.75; }
   .panel-archive-title .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin: 20px 0; }
 
   /* ── ARCHIVE GRID SECTION ────────────────────────────── */
@@ -402,16 +458,20 @@
   .archive-cell-meta { padding: 14px 16px 16px; border-top: 1px solid var(--border); }
   .archive-cell-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:6px; }
   .archive-cell-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:4px; }
-  .archive-cell-desc  { font-size:11px; color:var(--muted); line-height:1.5; }
+  .archive-cell-desc  { font-size:11px; color:var(--text); line-height:1.5; }
 
   /* ── OPENING GALLERY TITLE ───────────────────────────── */
   #opening-title {
     position: absolute;
     z-index: 10;
     text-align: center;
-    pointer-events: none;
     white-space: nowrap;
     transform: translateX(-50%);
+    top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
   }
   #opening-title .title-line1 {
     font-family: 'Orbitron', 'Courier New', monospace;
@@ -436,6 +496,18 @@
     margin-top: 14px;
     opacity: .9;
     filter: drop-shadow(0 0 18px rgba(200,169,110,0.4));
+  }
+  #opening-title .title-text-area {
+    margin-top: 32px;
+    max-width: 900px;
+    white-space: normal;
+    text-align: center;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+    opacity: .85;
+    pointer-events: none;
   }
 
   /* ── SECTION LABELS ──────────────────────────────────── */
@@ -551,7 +623,7 @@
 <!-- HUD -->
 <div id="hud">
   <div class="studio-label">270° Immersive Studio</div>
-  <div class="studio-dims">13578 × 1200 px</div>
+  <div class="studio-dims">12312 × 1080 px</div>
   <div class="studio-angle" id="angle-readout">0°</div>
 </div>
 
@@ -613,62 +685,78 @@
 /* ═══════════════════════════════════════════════════════
    CONFIGURATION
 ═══════════════════════════════════════════════════════ */
-const CANVAS_W = 13578;
-const CANVAS_H = 1200;
+const CANVAS_W = 12312;
+const CANVAS_H = 1080;
 const DEGREES  = 270;
 
 /* Placeholder exhibit data — replace image srcs with real URLs */
 const EXHIBIT_DATA = [
+  // SECTION 4 — Motion & Time
+  { section:'Motion & Time', tag:'Sequence', title:'Frame 0001–2400', desc:'Long-exposure astronomy collapsed into a single plane — motion as material.', x:1680, y:200, hue:[220,250], textOnly:true },
+  { section:'Motion & Time', tag:'Interval', title:'Between Seconds', desc:'High-speed capture of the moment physics turns counterintuitive.', x:2140, y:200, w:300, h:440, hue:[160,200], imgSrc:'' },
+
   // SECTION 2 — Material Studies
-  { section:'Material Studies', tag:'Surface', title:'Oxidized Field', desc:'Corrosion as aesthetic — iron, copper and time conspiring to produce unrepeatable texture.', x:1780, y:250, w:300, h:380, hue:[25,45], imgSrc:'' },
-  { section:'Material Studies', tag:'Surface', title:'Grain Memory', desc:'The wood holds the record of every season — a biography in cross-section.', x:2120, y:200, w:420, h:480, hue:[35,55], imgSrc:'' },
-  { section:'Material Studies', tag:'Texture', title:'Micro Atlas', desc:'Magnified to the point of abstraction — the familiar made alien at 200×.', x:2590, y:270, w:310, h:360, hue:[190,230], imgSrc:'' },
-  { section:'Material Studies', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:2940, y:220, w:360, h:420, hue:[60,90], imgSrc:'' },
+  { section:'Material Studies', tag:'Surface', title:'Oxidized Field', desc:'Corrosion as aesthetic — iron, copper and time conspiring to produce unrepeatable texture.', x:2560, y:200, w:360, h:440, hue:[25,45], imgSrc:'' },
+  { section:'Material Studies', tag:'Surface', title:'Grain Memory', desc:'The wood holds the record of every season — a biography in cross-section.', x:2960, y:200, w:360, h:440, hue:[35,55], imgSrc:'' },
+  { section:'Material Studies', tag:'Texture', title:'Micro Atlas', desc:'Magnified to the point of abstraction — the familiar made alien at 200×.', x:3360, y:200, w:360, h:440, hue:[190,230], imgSrc:'' },
 
   // SECTION 3 — Architectures
-  { section:'Architectures', tag:'Space', title:'Void / Volume', desc:'The negative space within brutalist shells — silence as structural element.', x:3560, y:180, w:440, h:500, hue:[200,240], imgSrc:'' },
-  { section:'Architectures', tag:'Space', title:'Repetition Engine', desc:'Seriality as monument — when the unit multiplied becomes something else entirely.', x:4050, y:260, w:320, h:380, hue:[250,290], imgSrc:'' },
-  { section:'Architectures', tag:'Light', title:'Fenestration Study', desc:'A systematic survey of aperture — 48 windows, 48 qualities of entering light.', x:4420, y:200, w:380, h:450, hue:[40,70], imgSrc:'' },
+  { section:'Architectures', tag:'Space', title:'Void / Volume', desc:'The negative space within brutalist shells — silence as structural element.', x:3840, y:200, w:360, h:440, hue:[200,240], imgSrc:'' },
+  { section:'Architectures', tag:'Space', title:'Repetition Engine', desc:'Seriality as monument — when the unit multiplied becomes something else entirely.', x:4240, y:200, w:360, h:440, hue:[250,290], imgSrc:'' },
+  { section:'Architectures', tag:'Light', title:'Fenestration Study', desc:'A systematic survey of aperture — 48 windows, 48 qualities of entering light.', x:4640, y:200, w:360, h:440, hue:[40,70], imgSrc:'' },
 
-  // SECTION 4 — Motion & Time
-  { section:'Motion & Time', tag:'Sequence', title:'Frame 0001–2400', desc:'Long-exposure astronomy collapsed into a single plane — motion as material.', x:5060, y:240, w:500, h:460, hue:[220,250], imgSrc:'' },
-  { section:'Motion & Time', tag:'Blur', title:'Velocity Portrait', desc:'Identity stripped to direction — the subject becomes a vector rather than a face.', x:5610, y:200, w:340, h:440, hue:[280,320], imgSrc:'' },
-  { section:'Motion & Time', tag:'Interval', title:'Between Seconds', desc:'High-speed capture of the moment physics turns counterintuitive.', x:6000, y:270, w:300, h:360, hue:[160,200], imgSrc:'' },
+  // SECTION 5 — Colour Field (Félicette)
+  { section:'Colour Field', tag:'Spectrum', title:'Residue', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful, and France moved on to other animals for spaceflight testing. The remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth\'s first, and so far only, cat astronaut.', x:5120, y:200, hue:[330,360], textOnly:true },
+  { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'', anchoredTo:'Residue', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[30,60],
+    cells:[
+      { tag:'Gradient', title:'Atmospheric Band I',   desc:'Place caption text here.', hue:[30,50],  imgSrc:'' },
+      { tag:'Gradient', title:'Atmospheric Band II',  desc:'Place caption text here.', hue:[40,65],  imgSrc:'' },
+      { tag:'Gradient', title:'Atmospheric Band III', desc:'Place caption text here.', hue:[50,75],  imgSrc:'' },
+      { tag:'Gradient', title:'Atmospheric Band IV',  desc:'Place caption text here.', hue:[25,45],  imgSrc:'' },
+    ]
+  },
 
-  // SECTION 5 — Colour Field
-  { section:'Colour Field', tag:'Spectrum', title:'Residue', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful, resulting in the death of the cat, and France moved on to other animals for spaceflight testing. With no further use for them, the remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette perched atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth's first, and so far only, cat astronaut.', x:6560, y:200, hue:[330,360], textOnly:true },
-  { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'Horizon as colour theory — the sky at dusk as an unrepeatable palette.', anchoredTo:'Residue', gap:20, relY:200, w:460, h:480, hue:[30,60], imgSrc:'' },
-  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 7', desc:'A single hue pushed through 48 tonal steps from near-white to near-black.', anchoredTo:'Atmospheric Band', gap:20, relY:200, w:320, h:400, hue:[120,160], imgSrc:'' },
-  { section:'Colour Field', tag:'Spectrum', title:'Saturation Study 8', desc:'A companion study — the inverse progression, tracing absence back to presence.', anchoredTo:'Saturation Study 7', gap:0, relY:620, sameXAs:'Saturation Study 7', w:320, h:400, hue:[140,180], imgSrc:'' },
+  // SECTION 6 — Figures (Laika)
+  { section:'Figures', tag:'Portrait', title:'Presence / Absence', desc:'Laika was a dog found on the streets of Moscow, one of three strays picked up to potentially serve as the first animal to orbit the earth. Soviet space officials believed that stray dogs would be suitable test subjects for spaceflight as they were used to harsh conditions and extended periods of hunger. The decision was made to go with Laika for the mission aboard a capsule atop Sputnik 2, a rapidly designed rocket built to satisfy the political desires of the Kremlin to achieve another space first. As space travel was a new frontier and spacecraft design was in its infancy, Sputnik 2 had no ability to return to Earth: Laika\'s flight was a one-way ticket. Before the launch, Soviet scientist Vladimir Yazdovsky brought Laika to play with his children. He later wrote, "I wanted to do something nice for her: She had so little time left to live."<br><br>On the morning of November 3, 1959, Laika lifted off from the Baikonur Cosmodrome, becoming the first animal to orbit the earth. Recorded data shows Laika was highly stressed but eating her specially prepared food. Her voyage was short-lived; Laika died five to seven hours after achieving orbit, most likely due to overheating from a failed module separation and inadequate temperature regulation systems, as Sputnik 2 was hastily constructed. Soviet agencies gave conflicting reports on Laika\'s death, with her ultimate fate not being widely known until after the collapse of the Soviet Union. On April 14, 1957, the Sputnik 2 rocket with Laika\'s remains aboard disintegrated during re-entry after orbiting the earth 2570 times.<br><br>As the first dog to orbit the earth, Laika has become imbedded in popular culture through songs, movies, books, and even stamps. In 2008 a new memorial was unveiled in Moscow, depicting Laika as bright and attentive atop a rocket that transforms into a grasping hand, symbolizing her role in humanities\' reach for the stars.', x:6252, y:200, hue:[200,230], textOnly:true },
+  { section:'Figures', tag:'Form', title:'Laika (Soviet Union, 1957', desc:'Laika was a dog found on the streets of Moscow, one of three strays picked up to potentially serve as the first animal to orbit the earth. Soviet space officials believed that stray dogs would be suitable test subjects for spaceflight as they were used to harsh conditions and extended periods of hunger. The decision was made to go with Laika for the mission aboard a capsule atop Sputnik 2, a rapidly designed rocket built to satisfy the political desires of the Kremlin to achieve another space first. As space travel was a new frontier and spacecraft design was in its infancy, Sputnik 2 had no ability to return to Earth: Laika\'s flight was a one-way ticket. Before the launch, Soviet scientist Vladimir Yazdovsky brought Laika to play with his children. He later wrote, "I wanted to do something nice for her: She had so little time left to live."<br><br>On the morning of November 3, 1959, Laika lifted off from the Baikonur Cosmodrome, becoming the first animal to orbit the earth. Recorded data shows Laika was highly stressed but eating her specially prepared food. Her voyage was short-lived; Laika died five to seven hours after achieving orbit, most likely due to overheating from a failed module separation and inadequate temperature regulation systems, as Sputnik 2 was hastily constructed. Soviet agencies gave conflicting reports on Laika\'s death, with her ultimate fate not being widely known until after the collapse of the Soviet Union. On April 14, 1957, the Sputnik 2 rocket with Laika\'s remains aboard disintegrated during re-entry after orbiting the earth 2570 times.<br><br>As the first dog to orbit the earth, Laika has become imbedded in popular culture through songs, movies, books, and even stamps. In 2008 a new memorial was unveiled in Moscow, depicting Laika as bright and attentive atop a rocket that transforms into a grasping hand, symbolizing her role in humanities\' reach for the stars.', x:8080, y:200, hue:[200,230], textOnly:true },
+', anchoredTo:'Presence / Absence', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[260,300],
+    cells:[
+      { tag:'Form', title:'Silhouette I',   desc:'Place caption text here.', hue:[260,290], imgSrc:'' },
+      { tag:'Form', title:'Silhouette II',  desc:'Place caption text here.', hue:[270,300], imgSrc:'' },
+      { tag:'Form', title:'Silhouette III', desc:'Place caption text here.', hue:[250,280], imgSrc:'' },
+      { tag:'Form', title:'Silhouette IV',  desc:'Place caption text here.', hue:[280,310], imgSrc:'' },
+    ]
+  },
 
-  // SECTION 6 — Figures
-  { section:'Figures', tag:'Portrait', title:'Presence / Absence', desc:'Laika was a dog found on the streets of Moscow, one of three strays picked up to potentially serve as the first animal to orbit the earth. Soviet space officials believed that stray dogs would be suitable test subjects for spaceflight as they were used to harsh conditions and extended periods of hunger. The decision was made to go with Laika for the mission aboard a capsule atop Sputnik 2, a rapidly designed rocket built to satisfy the political desires of the Kremlin to achieve another space first. As space travel was a new frontier and spacecraft design was in its infancy, Sputnik 2 had no ability to return to Earth: Laika\'s flight was a one-way ticket. Before the launch, Soviet scientist Vladimir Yazdovsky brought Laika to play with his children. He later wrote, "I wanted to do something nice for her: She had so little time left to live."<br><br>On the morning of November 3, 1959, Laika lifted off from the Baikonur Cosmodrome, becoming the first animal to orbit the earth. Recorded data shows Laika was highly stressed but eating her specially prepared food. Her voyage was short-lived; Laika died five to seven hours after achieving orbit, most likely due to overheating from a failed module separation and inadequate temperature regulation systems, as Sputnik 2 was hastily constructed. Soviet agencies gave conflicting reports on Laika\'s death, with her ultimate fate not being widely known until after the collapse of the Soviet Union. On April 14, 1957, the Sputnik 2 rocket with Laika\'s remains aboard disintegrated during re-entry after orbiting the earth 2570 times.<br><br>As the first dog to orbit the earth, Laika has become imbedded in popular culture through songs, movies, books, and even stamps. In 2008 a new memorial was unveiled in Moscow, depicting Laika as bright and attentive atop a rocket that transforms into a grasping hand, symbolizing her role in humanities\' reach for the stars.', x:8080, y:200, hue:[200,230], textOnly:true },
-  { section:'Figures', tag:'Form', title:'Silhouette Archive', desc:'Two thousand silhouettes collected over a decade — the body as universal shape.', anchoredTo:'Presence / Absence', gap:20, relY:200, w:300, h:480, hue:[260,300], imgSrc:'' },
-  { section:'Figures', tag:'Portrait', title:'Gesture Language', desc:'Eleven seconds of gesture, crystallised — meaning without words.', anchoredTo:'Silhouette Archive', gap:20, relY:200, w:320, h:230, hue:[40,75], imgSrc:'' },
-  { section:'Figures', tag:'Portrait', title:'Gesture Language II', desc:'A continuation of the gesture sequence — the body completing its sentence.', anchoredTo:'Gesture Language', gap:0, relY:450, sameXAs:'Gesture Language', w:320, h:230, hue:[55,90], imgSrc:'' },
-
-  // SECTION 7 — Landscape
-  { section:'Landscape', tag:'Geography', title:'Watershed', desc:'Ham, originally named No.65, was a chimpanzee purchased by the United States Air Force as one of forty spaceflight candidates. The space chimp program represented the next step in animal spaceflight as due to their biological similarities, their ability to learn from stimulus and instruction, and a reaction speed that was comparable to human pilots, apes could teach researchers much about the human potential to survive and operate in space. Like Félicette, Ham was given a number designation instead of a name to minimize the negative press from any fatal incident, although he was unofficially known as Ham to his trainers and the NASA team.<br><br>Ham and his fellow candidates were trained to push levers upon seeing a flashing light on a control panel. If he carried out his task he received a banana pellet; if he did not, an electric shock was administered.<br><br>On January 31, 1961, Ham flew into space from Cape Canaveral on a Mercury-Redstone 2 launch vehicle. His suborbital flight lasted sixteen minutes and thirty-nine seconds, during which time he responded to the control panel lights as he was trained to do, showing his reaction time in space was almost the same as back on Earth. As part of Project Mercury, his mission also served to test vital safety and environmental components for Alan Shepard\'s mission three months later.<br><br>After his return, Ham was officially named after the Holloman Aerospace Medical (HAM) Center and the commander of Holloman Aeromedical Laboratory, Lieutenant Colonel Hamilton "Ham" Blackshear. In 1963 he was sent to the National Zoo in Washington D.C. and later moved to the North Carolina Zoo. Ham died on January 19, 1983 and a historical marker near the zoo commemorates his brief flight into space.', x:9500, y:200, hue:[180,220], textOnly:true },
-  { section:'Landscape', tag:'Scale', title:'Aerial Survey', desc:'The land read as pure form — geology indifferent to human navigation.', anchoredTo:'Watershed', gap:20, relY:200, w:360, h:480, hue:[100,140], imgSrc:'' },
-  { section:'Landscape', tag:'Weather', title:'Pressure Front', desc:'The moment the atmosphere changes its mind about what the day will become.', anchoredTo:'Aerial Survey', gap:20, relY:200, w:320, h:230, hue:[220,260], imgSrc:'' },
-  { section:'Landscape', tag:'Weather', title:'Pressure Front II', desc:'The aftermath — the sky settling into the decision it has just made.', anchoredTo:'Pressure Front', gap:0, relY:450, sameXAs:'Pressure Front', w:320, h:230, hue:[200,240], imgSrc:'' },
+  // SECTION 7 — Landscape (Ham)
+  { section:'Landscape', tag:'Geography', title:'Watershed', desc:'Ham, originally named No.65, was a chimpanzee purchased by the United States Air Force as one of forty spaceflight candidates. The space chimp program represented the next step in animal spaceflight as due to their biological similarities, their ability to learn from stimulus and instruction, and a reaction speed that was comparable to human pilots, apes could teach researchers much about the human potential to survive and operate in space. Like Félicette, Ham was given a number designation instead of a name to minimize the negative press from any fatal incident, although he was unofficially known as Ham to his trainers and the NASA team.<br><br>Ham and his fellow candidates were trained to push levers upon seeing a flashing light on a control panel. If he carried out his task he received a banana pellet; if he did not, an electric shock was administered.<br><br>On January 31, 1961, Ham flew into space from Cape Canaveral on a Mercury-Redstone 2 launch vehicle. His suborbital flight lasted sixteen minutes and thirty-nine seconds, during which time he responded to the control panel lights as he was trained to do, showing his reaction time in space was almost the same as back on Earth. As part of Project Mercury, his mission also served to test vital safety and environmental components for Alan Shepard\'s mission three months later.<br><br>After his return, Ham was officially named after the Holloman Aerospace Medical (HAM) Center and the commander of Holloman Aeromedical Laboratory, Lieutenant Colonel Hamilton "Ham" Blackshear. In 1963 he was sent to the National Zoo in Washington D.C. and later moved to the North Carolina Zoo. Ham died on January 19, 1983 and a historical marker near the zoo commemorates his brief flight into space.', x:7384, y:200, hue:[180,220], textOnly:true },
+  { section:'Landscape', tag:'Scale', title:'Aerial Survey', desc:'', anchoredTo:'Watershed', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[100,140],
+    cells:[
+      { tag:'Scale', title:'Aerial Survey I',   desc:'Place caption text here.', hue:[100,130], imgSrc:'' },
+      { tag:'Scale', title:'Aerial Survey II',  desc:'Place caption text here.', hue:[110,140], imgSrc:'' },
+      { tag:'Scale', title:'Aerial Survey III', desc:'Place caption text here.', hue:[90,120],  imgSrc:'' },
+      { tag:'Scale', title:'Aerial Survey IV',  desc:'Place caption text here.', hue:[120,150], imgSrc:'' },
+    ]
+  },
 
   // SECTION 8 — Archive
-  { section:'The Archive', tag:'Document', title:'In Popular Culture', desc:'The idea of animals being sent into space wearing tiny spacesuits is a popular but incorrect depiction.', x:11120, y:200, hue:[40,65], textOnly:true, archiveTitle:true },
-  { section:'The Archive', gridSection:true, x:11120, anchoredToArchiveTitle:true, gap:20,
+  { section:'The Archive', tag:'Document', title:'Archive Title', desc:'', x:8516, y:200, hue:[40,65], textOnly:true, archiveTitle:true },
+  { section:'The Archive', gridSection:true, x:8516, anchoredToArchiveTitle:true, gap:20,
     items:[
-      { tag:'Film: Guardians of the Galaxy Vol.3 (2023)', title:'Cosmo the Space Dog',  desc:'Cosmo the Space Dog is modeled directly on Laika. As with her real-world inspiration, Cosmo was sent into space by the Soviet Union, and her suit still bears the CCCP logo. Notably, Cosmo is a large Labrador, while Laika was a mixed breed that only weighed appoximately 11 pounds--in early spaceflight every pound mattered.', hue:[40,65], imgSrc:'https://raw.githubusercontent.com/DigitalExplorationCenter/animalsinspace/37bf502f455a50cd2c7e7eff83d66fa5254cfb9e/images/cosmo_guardians.webp' },
-      { tag:'Music Video: Top of the World (2012)', title:'Soviet Space Monkey', desc:'In this Imagine Dragons music video, a group of Russian cosmonauts with a monkey watch an American moon launch, harkening to the lasting idea of space chimps in early space exploration, despite the fact the Soviet Union did not launch primates into space until the 1980s.', hue:[35,55], imgSrc:'https://raw.githubusercontent.com/DigitalExplorationCenter/animalsinspace/refs/heads/main/images/imagine_dragons_monkey.jpg' },
-      { tag:'Comic: Fantastic Four #13 (1963)',    title:'Red Ghost and the Super-Apes',    desc:'A proof marked 0/1 — the version before the edition, before the edition\'s idea.', hue:[260,300], imgSrc:'https://raw.githubusercontent.com/DigitalExplorationCenter/animalsinspace/refs/heads/main/images/red_ghost.jpeg' },
-      { tag:'Television: The Umbrella Academy (2019)', title:'Pogo',       desc:'Handwritten observations collected over thirty years in the field — a private cartography.', hue:[50,75], imgSrc:'https://raw.githubusercontent.com/DigitalExplorationCenter/animalsinspace/refs/heads/main/images/umbrella_academy.png' },
-      { tag:'Print: Space Cat (1952)',  title:'Flyball',      desc:'A telegram sent but never received — the message preserved in transit forever.', hue:[200,230], imgSrc:'https://raw.githubusercontent.com/DigitalExplorationCenter/animalsinspace/refs/heads/main/images/space_cat.jpg' },
-      { tag:'Film: Robinson Crusoe on Mars (1964)', title:'Mona the Woolly Monkey',       desc:'Contact prints from a single roll; the photographer\'s most intimate document.', hue:[30,60], imgSrc:'https://raw.githubusercontent.com/DigitalExplorationCenter/animalsinspace/refs/heads/main/images/crusoe_monkey.png' },
+      { tag:'Document', title:'Inventory #0442',  desc:'Catalogued between the objects themselves — provenance as aesthetic object.', hue:[40,65], imgSrc:'' },
+      { tag:'Document', title:'Found Film',        desc:'Twenty-seven frames from an undeveloped roll — 1973, location unknown.', hue:[35,55], imgSrc:'' },
+      { tag:'Print',    title:'Edition of One',    desc:'A proof marked 0/1 — the version before the edition, before the edition\'s idea.', hue:[260,300], imgSrc:'' },
+      { tag:'Document', title:'Field Notes',       desc:'Handwritten observations collected over thirty years in the field — a private cartography.', hue:[50,75], imgSrc:'' },
+      { tag:'Archive',  title:'Dispatch #19',      desc:'A telegram sent but never received — the message preserved in transit forever.', hue:[200,230], imgSrc:'' },
+      { tag:'Print',    title:'Proof Sheet',       desc:'Contact prints from a single roll; the photographer\'s most intimate document.', hue:[30,60], imgSrc:'' },
     ]
   },
 
   // SECTION 9 — Closing
-  { section:'Closing Room', tag:'Coda', title:'Afterimage', desc:'What persists when you close your eyes — the retina\'s own exhibition.', x:12580, y:240, w:360, h:420, hue:[330,360], imgSrc:'' },
-  { section:'Closing Room', tag:'Coda', title:'Return', desc:'Every exit from the studio leaves a trace. This is the record of departures.', x:12990, y:200, w:420, h:480, hue:[220,255], imgSrc:'' },
+  { section:'Closing Room', tag:'Coda', title:'Afterimage', desc:'What persists when you close your eyes — the retina\'s own exhibition.', x:9968, y:200, hue:[330,360], textOnly:true },
+
+  // Sedimentation — after Afterimage
+  { section:'Material Studies', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:10428, y:200, w:360, h:440, hue:[60,90], imgSrc:'' },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -777,11 +865,10 @@ const OG_CENTER_X = (OG_LEFT + OG_RIGHT) / 2;
 const titleEl = document.createElement('div');
 titleEl.id = 'opening-title';
 titleEl.style.left = OG_CENTER_X + 'px';
-titleEl.style.top = '50%';
-titleEl.style.transform = 'translate(-50%, -50%)';
 titleEl.innerHTML = `
   <div class="title-line1">Ad Astra Fur Aspera</div>
   <div class="title-line2">Animals in Space</div>
+  <div class="title-text-area">Place introductory text here.</div>
 `;
 studioCanvas.appendChild(titleEl);
 
@@ -898,6 +985,53 @@ EXHIBIT_DATA.forEach((item, idx) => {
     panels.push(panel);
     panelEls[item.title] = { el: panel, item };
 
+  } else if (item.anchoredTo && item.quadGrid) {
+    /* ── ANCHORED 2×2 QUAD GRID ── */
+    const cs = item.cellSize || 220;
+    const totalSize = cs * 2 + 12; // 2 cells + 1 gap
+    const grid = document.createElement('div');
+    grid.className = 'quad-grid';
+    grid.style.cssText = `left:0px;top:${item.relY}px;--cell-size:${cs}px;`;
+
+    item.cells.forEach(cell => {
+      const cellEl = document.createElement('div');
+      cellEl.className = 'quad-cell';
+
+      // Image
+      let imgEl;
+      if (cell.imgSrc) {
+        imgEl = document.createElement('img');
+        imgEl.src = cell.imgSrc;
+        imgEl.className = 'quad-cell-img';
+        imgEl.style.height = cs + 'px';
+      } else {
+        imgEl = makePlaceholderCanvas(cs, cs, cell.hue, cell.title);
+        imgEl.className = 'quad-cell-img';
+        imgEl.style.width = '100%';
+        imgEl.style.height = cs + 'px';
+        imgEl.style.display = 'block';
+      }
+      cellEl.appendChild(imgEl);
+
+      // Text beneath image
+      const meta = document.createElement('div');
+      meta.className = 'quad-cell-meta';
+      meta.innerHTML = `
+        <div class="quad-cell-title">${cell.title}</div>
+        <div class="quad-cell-desc">${cell.desc}</div>
+      `;
+      cellEl.appendChild(meta);
+
+      const cellItem = { ...cell, w: cs, h: cs };
+      cellEl.addEventListener('click', () => openLightbox(cellItem, imgEl));
+      grid.appendChild(cellEl);
+    });
+
+    studioCanvas.appendChild(grid);
+    panels.push(grid);
+    // totalSize is the column width; actual height measured after render via offsetHeight
+    panelEls[item.title] = { el: grid, item, isQuad: true, totalSize };
+
   } else if (item.anchoredTo) {
     /* ── ANCHORED PANEL (position set after render) ── */
     const panel = document.createElement('div');
@@ -945,8 +1079,9 @@ function resolvedRight(title) {
   if (!entry) return 0;
   const { el, item } = entry;
   const left = parseFloat(el.style.left) || 0;
-  const w = item.textOnly ? el.offsetWidth : (item.w || 0);
-  return left + w;
+  if (item.textOnly) return left + el.offsetWidth;
+  if (entry.isQuad) return left + entry.totalSize;
+  return left + (item.w || 0);
 }
 
 function repositionAnchored() {
@@ -967,17 +1102,65 @@ function repositionAnchored() {
 
     const newLeft = resolvedRight(item.anchoredTo) + (item.gap || 0);
     entry.el.style.left = newLeft + 'px';
-    entry.el.style.visibility = 'visible';
+    if (!entry.isQuad) entry.el.style.visibility = 'visible'; // quads shown in height pass below
+    else entry.el.style.visibility = 'visible';
   });
 
-  // Position archive grid to the right of the archive title panel
+  // ── Archive grid: position + constrain top row to title panel height ──
   if (archiveTitleEl && archiveGridEl) {
-    const titleLeft = parseFloat(archiveTitleEl.style.left) || 0;
-    const titleW = archiveTitleEl.offsetWidth;
+    const titleLeft   = parseFloat(archiveTitleEl.style.left) || 0;
+    const titleW      = archiveTitleEl.offsetWidth;
+    const titleH      = archiveTitleEl.offsetHeight;
+    const titleTop    = parseFloat(archiveTitleEl.style.top) || 200;
+
     archiveGridEl.style.left = (titleLeft + titleW + 20) + 'px';
-    archiveGridEl.style.top = '160px';
+    archiveGridEl.style.top  = titleTop + 'px';
     archiveGridEl.style.visibility = 'visible';
+
+    // Grid gap is 16px; two rows. Total available = titleH.
+    // Row 1 cells: image + meta. Meta is ~78px fixed. Image fills the rest.
+    // Row 2 gets remaining height after gap.
+    const GAP      = 16;
+    const META_H   = 78; // tag + title + desc padding ≈ 78px
+    const imgH_row1 = Math.max(80, Math.floor((titleH - GAP - META_H * 2) / 2));
+    const imgH_row2 = imgH_row1; // keep symmetrical
+
+    const cells = archiveGridEl.querySelectorAll('.archive-cell');
+    cells.forEach((cell, i) => {
+      const imgEl = cell.querySelector('.archive-cell-img');
+      if (!imgEl) return;
+      const h = i < 3 ? imgH_row1 : imgH_row2;
+      imgEl.style.height = h + 'px';
+    });
   }
+
+  // ── Dynamically adjust panels beside dynamic text panels ──
+  ['Residue', 'Presence / Absence', 'Watershed'].forEach(textTitle => {
+    const textEntry = panelEls[textTitle];
+    if (!textEntry) return;
+    const textTop  = parseFloat(textEntry.el.style.top) || 200;
+    const textH    = textEntry.el.offsetHeight;
+    if (!textH) return;
+
+    EXHIBIT_DATA.forEach(item => {
+      if (!item.anchoredTo || item.anchoredTo !== textTitle || item.sameXAs) return;
+      const entry = panelEls[item.title];
+      if (!entry) return;
+
+      if (entry.isQuad) {
+        // Vertically centre the quad grid against the text panel using actual rendered height
+        const quadH = entry.el.offsetHeight || (item.cellSize || 220) * 2 + 12;
+        const centredTop = textTop + Math.max(0, (textH - quadH) / 2);
+        entry.el.style.top = centredTop + 'px';
+        entry.el.style.visibility = 'visible';
+      } else {
+        // Standard anchored panel — match text panel height
+        entry.el.style.height = textH + 'px';
+        const imgEl = entry.el.querySelector('.panel-img-placeholder, img.panel-img-placeholder');
+        if (imgEl) imgEl.style.height = (textH - 80) + 'px';
+      }
+    });
+  });
 }
 
 // Run once after layout, then watch all text panels for resize
@@ -986,7 +1169,7 @@ requestAnimationFrame(() => {
 
   if (window.ResizeObserver) {
     const ro = new ResizeObserver(() => repositionAnchored());
-    ['Residue', 'Presence / Absence', 'Watershed'].forEach(title => {
+    ['Residue', 'Presence / Absence', 'Watershed', 'Frame 0001–2400', 'Afterimage'].forEach(title => {
       const entry = panelEls[title];
       if (entry) ro.observe(entry.el);
     });
