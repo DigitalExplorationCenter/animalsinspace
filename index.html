@@ -1057,7 +1057,7 @@ EXHIBIT_DATA.forEach((item, idx) => {
     panel.className = 'panel';
     panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
 
-    const ph = makeImage(item.w, item.h - 80, item, 'panel-img-placeholder');
+    const ph = makeImage(item.w, item.h - 100%, item, 'panel-img-placeholder');
     panel.appendChild(ph);
 
     const meta = document.createElement('div');
