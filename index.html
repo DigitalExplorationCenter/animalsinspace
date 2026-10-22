@@ -426,7 +426,7 @@
     position: absolute;
     z-index: 10;
     display: grid;
-    grid-template-columns: repeat(3, 280px);
+    grid-template-columns: repeat(4, 280px);
     grid-template-rows: repeat(2, auto);
     gap: 16px;
     visibility: hidden;
@@ -497,7 +497,7 @@
     white-space: normal;
     text-align: center;
     font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 18px;
+    font-size: 14px;
     line-height: 1.75;
     color: var(--text);
     opacity: .85;
@@ -668,7 +668,7 @@ const EXHIBIT_DATA = [
   { section:'Architectures', tag:'Light', title:'Fenestration Study', desc:'A systematic survey of aperture — 48 windows, 48 qualities of entering light.', x:4640, y:200, w:360, h:440, hue:[40,70], imgSrc:'' },
 
   // SECTION 5 — Colour Field (Félicette)
-  { section:'Colour Field', tag:'Spectrum', title:'Residue', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful leading to the death of the unnamed feline, and France moved on to other animals for spaceflight testing. With no futher need for them, the remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette perched atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth\'s first, and so far only, cat astronaut.', x:5120, y:200, hue:[330,360], textOnly:true },
+  { section:'Colour Field', tag:'Spectrum', title:'Residue', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful, and France moved on to other animals for spaceflight testing. The remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth\'s first, and so far only, cat astronaut.', x:5120, y:200, hue:[330,360], textOnly:true },
   { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'', anchoredTo:'Residue', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[30,60],
     cells:[
       { tag:'Gradient', title:'Atmospheric Band I',   desc:'Place caption text here.', hue:[30,50],  imgSrc:'' },
@@ -696,11 +696,11 @@ const EXHIBIT_DATA = [
       { tag:'Scale', title:'Aerial Survey I',   desc:'Place caption text here.', hue:[100,130], imgSrc:'' },
       { tag:'Scale', title:'Aerial Survey II',  desc:'Place caption text here.', hue:[110,140], imgSrc:'' },
       { tag:'Scale', title:'Aerial Survey III', desc:'Place caption text here.', hue:[90,120],  imgSrc:'' },
-      { tag:'Scale', title:'Aerial Survey IV',  desc:'Chimp and ape exhibit at the US Space Force Museum at Cape Canaveral. Of the eight space primates pictured in the exhibit, four did not survive their missions. photo credit: D.Fandino', hue:[120,150], imgSrc:'images/museum_chimps.jpg' },
+      { tag:'Scale', title:'Aerial Survey IV',  desc:'Place caption text here.', hue:[120,150], imgSrc:'' },
     ]
   },
 
-  // SECTION 8 — Archive  
+  // SECTION 8 — Archive
   { section:'The Archive', tag:'Document', title:'Archive Title', desc:'', x:8516, y:200, hue:[40,65], textOnly:true, archiveTitle:true },
   { section:'The Archive', gridSection:true, x:8516, anchoredToArchiveTitle:true, gap:20,
     items:[
@@ -710,14 +710,16 @@ const EXHIBIT_DATA = [
       { tag:'Comic: Fantastic Four (1963)', title:'Red Ghost & the Super Apes', desc:'Soviet scientist Ivan Kragoff replicates the Fantastic Four's spacelight, which gives him and his crew of trained apes abnormal powers--which they then use for evil. The Red Ghost is emblematic of Cold War competition between the US and the USSR.', hue:[260,300], imgSrc:'images/red_ghost.jpeg' },
       { tag:'Television: The Umbrella Academy (2019)', title:'Pogo', desc:'Handwritten observations collected over thirty years in the field — a private cartography.', hue:[50,75], imgSrc:'images/umbrella_academy.png' },
       { tag:'Film', title:'Robinson Crusoe on Mars (1964)', desc:'The first mission to Mars ends in near-disaster, leaving co-pilot Kit Draper and monkey Mona as the only survivors. While Mona proves helpful at points during the film, the reasoning for having a monkey aboard the first Martain expedition is more a nod to the extensive news coverage of primates in the early American space program, which made their future participation seem plausible.', hue:[30,60], imgSrc:'images/crusoe_monkey.png' },
+      { tag:'Document', title:'Survey #003',       desc:'A methodical record of what was present — and what was already gone.', hue:[45,70], imgSrc:'' },
+      { tag:'Archive',  title:'Plate XXIV',        desc:'From an edition of fifty — this copy never left the archive.', hue:[220,255], imgSrc:'' },
     ]
   },
 
   // SECTION 9 — Closing
-  { section:'Closing Room', tag:'Coda', title:'Afterimage', desc:'What persists when you close your eyes — the retina\'s own exhibition.', x:9968, y:200, hue:[330,360], textOnly:true },
+  { section:'Closing Room', tag:'Coda', title:'Afterimage', desc:'What persists when you close your eyes — the retina\'s own exhibition.', x:10264, y:200, hue:[330,360], textOnly:true },
 
   // Sedimentation — after Afterimage
-  { section:'Material Studies', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:10428, y:200, w:360, h:440, hue:[60,90], imgSrc:'' },
+  { section:'Material Studies', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:10724, y:200, w:360, h:440, hue:[60,90], imgSrc:'' },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -826,11 +828,11 @@ const OG_CENTER_X = (OG_LEFT + OG_RIGHT) / 2;
 const titleEl = document.createElement('div');
 titleEl.id = 'opening-title';
 titleEl.style.left = OG_CENTER_X + 'px';
-titleEl.style.top = '20%';  
+titleEl.style.top = '20%'; 
 titleEl.innerHTML = `
   <div class="title-line1">Ad Astra Fur Aspera</div>
   <div class="title-line2">Animals in Space</div>
-  <div class="title-text-area">At the dawn of the space age, space was truly unknown territory. Little was known about the impact of spaceflight on living creatures. It was questionable if humans could even survive in the cold dark of space. Animal testing was seen as a necessary first step before human missions, and so humanities’ path to the stars began with animal pioneers.<br><br>“Without animal testing in the early days of the human space program, the Soviet and American programs could have suffered great losses of human life. These animals performed a service to their respective countries that no human could or would have performed. They gave their lives and/or their service in the name of technological advancement, paving the way for humanity’s many forays into space.”<br>--"A Brief History of Animals in Space," Tara Grey<br><br>These animal astronauts had no choice in the matter, but their successes and sometimes sacrifices paved the way for early successful human spaceflight. Dogs, primates, and even cats were used to demonstrate that living creatures could live and work in space, although questions remain over the ethics and of using animals in testing that at times was guaranteed to be fatal. Once spaceflight was proven to be safe for humans, scientific experiments using smaller animals such as rats and turtles became the norm. Humans and animals continue to form a partnership in space exploration, as animals and humans both brave the dangers of the final frontier. This exhibit highlights the history of animals in space and the mission of three animal astronauts: Russian dog Laika, French cat Félicette, and American chimp Ham.</div>
+  <div class="title-text-area">At the dawn of the space age, space was truly unknown territory. Little was known about the impact of spaceflight on living creatures. It was questionable if humans could even survive in the cold dark of space. Animal testing was seen as a necessary first step before human missions, and so humanities’ path to the stars began with animal pioneers.<br><br>“Without animal testing in the early days of the human space program, the Soviet and American programs could have suffered great losses of human life. These animals performed a service to their respective countries that no human could or would have performed. They gave their lives and/or their service in the name of technological advancement, paving the way for humanity’s many forays into space.”<br>--"A Brief History of Animals in Space," Tara Grey<br><br>These animal astronauts had no choice in the matter, but their successes and sometimes sacrifices paved the way for early successful human spaceflight. Dogs, primates, and even cats were used to demonstrate that living creatures could live and work in space, although questions remain over the ethics and of using animals in testing that at times was guaranteed to be fatal. Once spaceflight was proven to be safe for humans, scientific experiments using smaller animals such as rats and turtles became the norm. Humans and animals continue to form a partnership in space exploration, as animals and humans both brave the dangers of the final frontier. This exhibit highlights the history of animals in space and the mission of three animal astronauts: Russian dog Laika, French cat Félicette, and American chimp Ham.</div></div>
 `;
 studioCanvas.appendChild(titleEl);
 
@@ -1088,6 +1090,7 @@ function repositionAnchored() {
     const GAP      = 16;
     const META_H   = 78; // tag + title + desc padding ≈ 78px
     const imgH_row1 = 187; // fixed 3:2 ratio at 280px width
+    // grid is 4 cols × 280px + 3 gaps × 16px = 1168px total width
     const imgH_row2 = imgH_row1; // keep symmetrical
 
     const cells = archiveGridEl.querySelectorAll('.archive-cell');
