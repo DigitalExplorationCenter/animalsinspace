@@ -673,7 +673,7 @@ const EXHIBIT_DATA = [
     cells:[
       { tag:'Gradient', title:'Commemorative photo',   desc:'A photo taken after Félicette\'s flight, thanking people for their support, with her implanted electrodes visible. photo credit: CNES', hue:[30,50],  imgSrc:'images/felicette_postcard.jpg' },
       { tag:'Gradient', title:'Cat\'s in the Cradle',  desc:'Félicette in her cradle, about to be loaded onto a sealed container in the nose of the Véronique rocket.', hue:[40,65],  imgSrc:'images/felicette_cradle.jpg' },
-      { tag:'Gradient', title:'Félicette and Véronique', desc:'Workers prepare the cat-sized habitat compartment of the Véronique rocket shortly before liftoff.', hue:[50,75],  imgSrc:'felicette_nose.jpg' },
+      { tag:'Gradient', title:'Félicette and Véronique', desc:'Workers prepare the cat-sized habitat compartment of the Véronique rocket shortly before liftoff.', hue:[50,75],  imgSrc:'images/felicette_nose.jpg' },
       { tag:'Gradient', title:'Memorial',  desc:'The memorial to Félicette, at the International Space University in Strasbourg, France. photo credit: space.com', hue:[25,45],  imgSrc:'images/felicette_spacecom.jpg' },
     ]
   },
@@ -710,7 +710,7 @@ const EXHIBIT_DATA = [
       { tag:'Television: The Umbrella Academy (2019)', title:'Pogo', desc:'Handwritten observations collected over thirty years in the field — a private cartography.', hue:[50,75], imgSrc:'images/umbrella_academy.png' },
       { tag:'Literature: Space Cat (1952)', title:'Flyball', desc:'After being adopted by a space program pilot, a gray cat named Flyball stows away on an experimental rocket (very cat behavior), becoming the titular space cat. Flyball eventually explores Mars and Venus, marries a Martian cat, and raises two kittens while keeping his human captain company.', hue:[200,230], imgSrc:'images/space_cat.jpg' },
       { tag:'Film', title:'Robinson Crusoe on Mars (1964)', desc:'The first mission to Mars ends in near-disaster, leaving co-pilot Kit Draper and monkey Mona as the only survivors. While Mona proves helpful at points during the film, the reasoning for having a monkey aboard the first Martain expedition is more a nod to the extensive news coverage of primates in the early American space program, which made their future participation as partners in exploration seem plausible.', hue:[30,60], imgSrc:'images/crusoe_monkey.png' },
-      { tag:'Document', title:'Survey #003',       desc:'A methodical record of what was present — and what was already gone.', hue:[45,70], imgSrc:'' },
+      { tag:'Film', title:'Ad Astra (2019)',       desc:'In a darker, horror-inflected vision of animals in space, As Astra features an abandoned Norweigan research station occupied by drill monkeys, driven to murderous rage from their isolation and the experimentation done on them.', hue:[45,70], imgSrc:'images/ad_astra.jpg' },
       { tag:'Archive',  title:'Plate XXIV',        desc:'From an edition of fifty — this copy never left the archive.', hue:[220,255], imgSrc:'' },
     ]
   },
@@ -830,8 +830,8 @@ titleEl.id = 'opening-title';
 titleEl.style.left = OG_CENTER_X + 'px';
 titleEl.style.top = '20%'; 
 titleEl.innerHTML = `
-  <div class="title-line1">Ad Astra Fur Aspera</div>
-  <div class="title-line2">Animals in Space</div>
+  <div class="title-line1">Animal Astronauts</div>
+  <div class="title-line2"></div>
   <div class="title-text-area">At the dawn of the space age, space was truly unknown territory. Little was known about the impact of spaceflight on living creatures. It was questionable if humans could even survive in the cold dark of space. Animal testing was seen as a necessary first step before human missions, and so humanities’ path to the stars began with animal pioneers.<br><br>“Without animal testing in the early days of the human space program, the Soviet and American programs could have suffered great losses of human life. These animals performed a service to their respective countries that no human could or would have performed. They gave their lives and/or their service in the name of technological advancement, paving the way for humanity’s many forays into space.”<br>--"A Brief History of Animals in Space," Tara Grey<br><br>These animal astronauts had no choice in the matter, but their successes and sometimes sacrifices were key to manned spaceflight. Dogs, primates, and even cats were used to demonstrate that living creatures could live and work in space, although questions remain over the ethics and of using animals in testing that at times was guaranteed to be fatal or purely politically motivated. Once spaceflight was proven to be safe for humans, scientific experiments using smaller animals such as rats and turtles became the norm. Humans and animals continue to form a partnership in space exploration, as animals and humans both brave the dangers of the final frontier. This exhibit highlights the history of animals in space and the mission of three animal astronauts: Russian dog Laika, French cat Félicette, and American chimp Ham.</div></div>
 `;
 studioCanvas.appendChild(titleEl);
