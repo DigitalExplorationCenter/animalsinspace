@@ -343,6 +343,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    pointer-events: none;
   }
   /* Placeholder shown when no video src */
   .panel-video-placeholder {
@@ -383,6 +384,7 @@
     gap: 10px;
     opacity: 0;
     transition: opacity .2s;
+    pointer-events: all;
   }
   .panel-video-wrap:hover .panel-video-controls { opacity: 1; }
   .vp-play {
@@ -1151,6 +1153,13 @@ EXHIBIT_DATA.forEach((item, idx) => {
     const videoWrap = document.createElement('div');
     videoWrap.className = 'panel-video-wrap';
     videoWrap.style.height = (item.h - 80) + 'px';
+
+    // Forward wheel events from video panel up to the viewport scroller
+    videoWrap.addEventListener('wheel', e => {
+      scrollX += e.deltaY + e.deltaX;
+      applyScroll();
+      e.preventDefault();
+    }, { passive: false });
  
     if (item.videoSrc) {
       // Real video
