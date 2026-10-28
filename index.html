@@ -18,638 +18,122 @@
     --muted: #6b6878;
     --border: rgba(200, 169, 110, 0.18);
     --glow: rgba(123, 156, 255, 0.12);
-
-    /* Studio canvas — 12312 × 1080 px, 270° wrap */
     --canvas-w: 12312px;
     --canvas-h: 1080px;
-    --viewport-h: 100vh;
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'Helvetica Neue',Arial,sans-serif; overflow:hidden; }
 
-  html, body {
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    overflow: hidden;
-  }
+  #hud { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:18px 36px; background:linear-gradient(180deg,rgba(8,8,16,.96) 60%,transparent); pointer-events:none; }
+  #hud .studio-label { font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+  #hud .studio-dims  { font-size:11px; letter-spacing:.12em; color:var(--muted); }
+  #hud .studio-angle { font-size:11px; letter-spacing:.14em; color:var(--accent2); }
 
-  /* ── CHROME ──────────────────────────────────────────── */
-  #hud {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 36px;
-    background: linear-gradient(180deg, rgba(8,8,16,.96) 60%, transparent);
-    pointer-events: none;
-  }
-  #hud .studio-label {
-    font-size: 11px;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 600;
-  }
-  #hud .studio-dims {
-    font-size: 11px;
-    letter-spacing: .12em;
-    color: var(--muted);
-  }
-  #hud .studio-angle {
-    font-size: 11px;
-    letter-spacing: .14em;
-    color: var(--accent2);
-  }
+  #minimap-wrap { position:fixed; bottom:28px; right:36px; z-index:100; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+  #minimap-label { font-size:9px; letter-spacing:.18em; color:var(--muted); text-transform:uppercase; }
+  #minimap { width:200px; height:22px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:3px; position:relative; overflow:hidden; }
+  #minimap-thumb { position:absolute; top:2px; bottom:2px; background:rgba(200,169,110,.35); border:1px solid var(--accent); border-radius:2px; transition:left .08s,width .08s; }
+  #minimap-dots { position:absolute; inset:0; display:flex; align-items:center; padding:0 4px; pointer-events:none; }
+  .mm-dot { flex:1; height:6px; margin:0 1px; background:rgba(255,255,255,.07); border-radius:1px; }
 
-  /* ── MINIMAP ─────────────────────────────────────────── */
-  #minimap-wrap {
-    position: fixed;
-    bottom: 28px; right: 36px;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-  }
-  #minimap-label {
-    font-size: 9px;
-    letter-spacing: .18em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-  #minimap {
-    width: 200px;
-    height: 22px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    position: relative;
-    overflow: hidden;
-  }
-  #minimap-thumb {
-    position: absolute;
-    top: 2px; bottom: 2px;
-    background: rgba(200,169,110,.35);
-    border: 1px solid var(--accent);
-    border-radius: 2px;
-    transition: left .08s, width .08s;
-  }
-  #minimap-dots {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    padding: 0 4px;
-    gap: 0;
-    pointer-events: none;
-  }
-  .mm-dot {
-    flex: 1;
-    height: 6px;
-    margin: 0 1px;
-    background: rgba(255,255,255,.07);
-    border-radius: 1px;
-  }
+  #controls { position:fixed; bottom:28px; left:36px; z-index:100; display:flex; gap:12px; align-items:center; }
+  .ctrl-btn { width:40px; height:40px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,border-color .15s; }
+  .ctrl-btn:hover { background:rgba(200,169,110,.14); border-color:var(--accent); }
 
-  /* ── CONTROLS ────────────────────────────────────────── */
-  #controls {
-    position: fixed;
-    bottom: 28px; left: 36px;
-    z-index: 100;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  .ctrl-btn {
-    width: 40px; height: 40px;
-    background: rgba(255,255,255,.05);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-size: 18px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .15s, border-color .15s;
-  }
-  .ctrl-btn:hover { background: rgba(200,169,110,.14); border-color: var(--accent); }
+  #studio-viewport { position:fixed; inset:0; overflow:hidden; cursor:grab; }
+  #studio-viewport.dragging { cursor:grabbing; }
 
+  #studio-canvas { width:var(--canvas-w); height:var(--canvas-h); position:absolute; top:50%; transform:translateY(-50%) translateX(0); will-change:transform; }
+  #studio-canvas::before, #studio-canvas::after { content:''; position:absolute; left:0; right:0; pointer-events:none; z-index:0; }
+  #studio-canvas::before { top:0; height:90px; background:linear-gradient(180deg,rgba(8,8,16,.9) 0%,transparent 100%); }
+  #studio-canvas::after  { bottom:0; height:90px; background:linear-gradient(0deg,rgba(8,8,16,.9) 0%,transparent 100%); }
 
-  /* ── STUDIO VIEWPORT ─────────────────────────────────── */
-  #studio-viewport {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    cursor: grab;
-  }
-  #studio-viewport.dragging { cursor: grabbing; }
+  #studio-bg { position:absolute; inset:0; background:linear-gradient(180deg,#0b0b18 0%,#0d0d1e 45%,#0a0a16 100%); z-index:0; }
+  #studio-bg::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(123,156,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(123,156,255,.04) 1px,transparent 1px); background-size:120px 120px; mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.5) 30%,rgba(0,0,0,.5) 70%,transparent 100%); }
 
-  /* ── STUDIO CANVAS ───────────────────────────────────── */
-  #studio-canvas {
-    width: var(--canvas-w);
-    height: var(--canvas-h);
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%) translateX(0);
-    will-change: transform;
-  }
+  #floor-line { position:absolute; bottom:80px; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent 0%,var(--accent) 10%,var(--accent) 90%,transparent 100%); opacity:.25; z-index:1; }
+  .glow-pool { position:absolute; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+  .section-divider { position:absolute; top:60px; bottom:60px; width:1px; background:linear-gradient(180deg,transparent,var(--border) 30%,var(--border) 70%,transparent); z-index:2; }
+  .section-label { position:absolute; top:32px; font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); z-index:3; transform:translateX(-50%); }
 
-  /* Floor & ceiling gradient strips */
-  #studio-canvas::before,
-  #studio-canvas::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    pointer-events: none;
-    z-index: 0;
-  }
-  #studio-canvas::before {
-    top: 0; height: 90px;
-    background: linear-gradient(180deg, rgba(8,8,16,.9) 0%, transparent 100%);
-  }
-  #studio-canvas::after {
-    bottom: 0; height: 90px;
-    background: linear-gradient(0deg, rgba(8,8,16,.9) 0%, transparent 100%);
-  }
+  /* ── STANDARD PANEL ── */
+  .panel { position:absolute; z-index:10; display:flex; flex-direction:column; background:var(--panel-bg); border:1px solid var(--border); border-radius:2px; overflow:hidden; transition:border-color .2s,box-shadow .2s,transform .2s; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+  .panel:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent),0 12px 60px rgba(200,169,110,.12); transform:translateY(-4px); z-index:20; }
+  .panel-img-placeholder { width:100%; flex:1; display:block; min-height:200px; }
+  .panel-meta { padding:14px 16px 16px; border-top:1px solid var(--border); }
+  .panel-tag { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:6px; }
+  .panel-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:4px; }
+  .panel-sub { font-size:11px; color:var(--text); line-height:1.5; }
 
-  /* Studio background — subtle grid + gradient sky */
-  #studio-bg {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(180deg,
-        #0b0b18 0%,
-        #0d0d1e 45%,
-        #0a0a16 100%);
-    z-index: 0;
-  }
-  #studio-bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background-image:
-      linear-gradient(rgba(123,156,255,.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(123,156,255,.04) 1px, transparent 1px);
-    background-size: 120px 120px;
-    mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.5) 30%, rgba(0,0,0,.5) 70%, transparent 100%);
-  }
+  /* ── VIDEO PANEL ── */
+  .panel-video { position:absolute; z-index:10; display:flex; flex-direction:column; background:var(--panel-bg); border:1px solid var(--border); border-radius:2px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.5); transition:border-color .2s,box-shadow .2s,transform .2s; }
+  .panel-video:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent),0 12px 60px rgba(200,169,110,.12); transform:translateY(-4px); z-index:20; }
+  .panel-video-wrap { position:relative; width:100%; flex:1; background:#000; overflow:hidden; min-height:200px; cursor:pointer; }
+  .panel-video-wrap video { width:100%; height:100%; object-fit:cover; display:block; }
+  .panel-video-placeholder { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:#080810; pointer-events:none; }
+  .vp-icon { width:52px; height:52px; border-radius:50%; border:2px solid rgba(200,169,110,.3); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--accent); opacity:.6; }
+  .vp-label { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+  .panel-video-controls { position:absolute; bottom:0; left:0; right:0; padding:8px 12px; background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,transparent 100%); display:flex; align-items:center; gap:10px; opacity:0; transition:opacity .2s; pointer-events:all; }
+  .panel-video-wrap:hover .panel-video-controls { opacity:1; }
+  .vp-play { width:28px; height:28px; background:rgba(200,169,110,.2); border:1px solid rgba(200,169,110,.4); border-radius:50%; color:var(--accent); font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s; }
+  .vp-play:hover { background:rgba(200,169,110,.4); }
+  .vp-progress { flex:1; height:3px; background:rgba(255,255,255,.15); border-radius:2px; cursor:pointer; position:relative; overflow:hidden; }
+  .vp-progress-fill { height:100%; width:0%; background:var(--accent); border-radius:2px; transition:width .1s linear; pointer-events:none; }
+  .vp-time { font-size:9px; letter-spacing:.06em; color:rgba(255,255,255,.5); white-space:nowrap; flex-shrink:0; }
+  .vp-mute { width:22px; height:22px; background:none; border:none; color:rgba(255,255,255,.4); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; padding:0; }
+  .vp-mute:hover { color:var(--accent); }
 
-  /* ── FLOOR LINE ──────────────────────────────────────── */
-  #floor-line {
-    position: absolute;
-    bottom: 80px; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, var(--accent) 10%, var(--accent) 90%, transparent 100%);
-    opacity: .25;
-    z-index: 1;
-  }
-
-  /* ── AMBIENT GLOW POOLS ──────────────────────────────── */
-  .glow-pool {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ── SECTION DIVIDERS ────────────────────────────────── */
-  .section-divider {
-    position: absolute;
-    top: 60px; bottom: 60px;
-    width: 1px;
-    background: linear-gradient(180deg, transparent, var(--border) 30%, var(--border) 70%, transparent);
-    z-index: 2;
-  }
-
-  /* ── EXHIBIT PANELS ──────────────────────────────────── */
-  .panel {
-    position: absolute;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    transition: border-color .2s, box-shadow .2s, transform .2s;
-    box-shadow: 0 8px 40px rgba(0,0,0,.5);
-  }
-  .panel:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
-    transform: translateY(-4px);
-    z-index: 20;
-  }
-  .panel-img {
-    width: 100%;
-    flex: 1;
-    object-fit: cover;
-    display: block;
-    background: #1a1a2e;
-  }
-  /* Placeholder gradient images */
-  .panel-img-placeholder {
-    width: 100%;
-    flex: 1;
-    display: block;
-    min-height: 200px;
-  }
-  .panel-meta {
-    padding: 14px 16px 16px;
-    border-top: 1px solid var(--border);
-  }
-  .panel-tag {
-    font-size: 9px;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .panel-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1.3;
-    margin-bottom: 4px;
-  }
-  .panel-sub {
-    font-size: 11px;
-    color: var(--text);
-    line-height: 1.5;
-  }
-
-  /* ── HERO BANNER ─────────────────────────────────────── */
-  #hero-banner {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 5;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  #hero-banner h1 {
-    font-size: clamp(28px, 3.5vw, 52px);
-    font-weight: 200;
-    letter-spacing: .3em;
-    text-transform: uppercase;
-    color: var(--text);
-    opacity: .85;
-  }
-  #hero-banner p {
-    font-size: 11px;
-    letter-spacing: .22em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-top: 10px;
-  }
-
-   /* ── VIDEO PLAYER PANEL ──────────────────────────────── */
-  .panel-video {
-    position: absolute;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    box-shadow: 0 8px 40px rgba(0,0,0,.5);
-    transition: border-color .2s, box-shadow .2s, transform .2s;
-  }
-  .panel-video:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
-    transform: translateY(-4px);
-    z-index: 20;
-  }
-  .panel-video-wrap {
-    position: relative;
-    width: 100%;
-    flex: 1;
-    background: #000;
-    overflow: hidden;
-    min-height: 200px;
-  }
-  .panel-video-wrap video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    pointer-events: none;
-  }
-  /* Placeholder shown when no video src */
-  .panel-video-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    background: #080810;
-    color: var(--muted);
-    pointer-events: none;
-  }
-  .panel-video-placeholder .vp-icon {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    border: 2px solid rgba(200,169,110,.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    color: var(--accent);
-    opacity: .6;
-  }
-  .panel-video-placeholder .vp-label {
-    font-size: 9px;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  /* Custom controls bar */
-  .panel-video-controls {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    padding: 8px 12px;
-    background: linear-gradient(0deg, rgba(0,0,0,.85) 0%, transparent 100%);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    opacity: 0;
-    transition: opacity .2s;
-    pointer-events: all;
-  }
-  .panel-video-wrap:hover .panel-video-controls { opacity: 1; }
-  .vp-play {
-    width: 28px; height: 28px;
-    background: rgba(200,169,110,.2);
-    border: 1px solid rgba(200,169,110,.4);
-    border-radius: 50%;
-    color: var(--accent);
-    font-size: 11px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: background .15s;
-  }
-  .vp-play:hover { background: rgba(200,169,110,.4); }
-  .vp-progress {
-    flex: 1;
-    height: 3px;
-    background: rgba(255,255,255,.15);
-    border-radius: 2px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-  .vp-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width .1s linear;
-    pointer-events: none;
-  }
-  .vp-time {
-    font-size: 9px;
-    letter-spacing: .06em;
-    color: rgba(255,255,255,.5);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .vp-mute {
-    width: 22px; height: 22px;
-    background: none;
-    border: none;
-    color: rgba(255,255,255,.4);
-    font-size: 13px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    padding: 0;
-  }
-  .vp-mute:hover { color: var(--accent); }
-
-  /* ── TEXT-ONLY PANEL ─────────────────────────────────── */
-  .panel-text {
-    position: absolute;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 36px 32px;
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    box-shadow: 0 8px 40px rgba(0,0,0,.5);
-    transition: border-color .2s, box-shadow .2s;
-    width: auto !important;
-    height: auto !important;
-    max-width: 600px;
-    min-width: 280px;
-  }
-  .panel-text:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
-  }
+  /* ── TEXT PANEL ── */
+  .panel-text { position:absolute; z-index:10; display:flex; flex-direction:column; justify-content:flex-start; padding:36px 32px; background:var(--panel-bg); border:1px solid var(--border); border-radius:2px; box-shadow:0 8px 40px rgba(0,0,0,.5); transition:border-color .2s,box-shadow .2s; width:auto!important; height:auto!important; max-width:600px; min-width:280px; }
+  .panel-text:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent),0 12px 60px rgba(200,169,110,.12); }
   .panel-text .panel-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:14px; }
   .panel-text .panel-title { font-size:22px; font-weight:600; color:var(--text); line-height:1.25; margin-bottom:18px; }
   .panel-text .panel-sub   { font-size:13px; color:var(--text); line-height:1.75; }
-  .panel-text .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin: 20px 0; }
+  .panel-text .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin:20px 0; }
 
-  /* ── 2×2 QUAD IMAGE GRID ─────────────────────────────── */
-  .quad-grid {
-    position: absolute;
-    z-index: 10;
-    display: grid;
-    grid-template-columns: repeat(2, var(--cell-size, 220px));
-    grid-template-rows: repeat(2, auto);
-    gap: 12px;
-    visibility: hidden;
-  }
-  .quad-cell {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    transition: border-color .2s, transform .2s, box-shadow .2s;
-    background: var(--panel-bg);
-    overflow: hidden;
-  }
-  .quad-cell:hover {
-    border-color: var(--accent);
-    transform: translateY(-3px);
-    box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(200,169,110,.15);
-    z-index: 20;
-  }
-  .quad-cell-img {
-    width: 100%;
-    height: var(--cell-size, 220px);
-    object-fit: cover;
-    display: block;
-    flex-shrink: 0;
-  }
-  .quad-cell canvas.quad-cell-img {
-    width: 100% !important;
-    height: var(--cell-size, 220px) !important;
-  }
-  .quad-cell-meta {
-    padding: 10px 12px 14px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .quad-cell-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1.3;
-    margin-bottom: 4px;
-  }
-  .quad-cell-desc {
-    font-size: 11px;
-    color: var(--text);
-    line-height: 1.5;
-    opacity: .8;
-  }
+  /* ── QUAD GRID ── */
+  .quad-grid { position:absolute; z-index:10; display:grid; grid-template-columns:repeat(2,var(--cell-size,220px)); grid-template-rows:repeat(2,auto); gap:12px; visibility:hidden; }
+  .quad-cell { display:flex; flex-direction:column; border:1px solid var(--border); border-radius:2px; cursor:pointer; transition:border-color .2s,transform .2s,box-shadow .2s; background:var(--panel-bg); overflow:hidden; }
+  .quad-cell:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 0 0 1px var(--accent),0 8px 30px rgba(200,169,110,.15); z-index:20; }
+  .quad-cell-img { width:100%; height:var(--cell-size,220px); object-fit:cover; display:block; flex-shrink:0; }
+  .quad-cell canvas.quad-cell-img { width:100%!important; height:var(--cell-size,220px)!important; }
+  .quad-cell-meta { padding:10px 12px 14px; border-top:1px solid var(--border); flex-shrink:0; }
+  .quad-cell-title { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:4px; }
+  .quad-cell-desc  { font-size:11px; color:var(--text); line-height:1.5; opacity:.8; }
 
-  /* ── ARCHIVE TITLE PANEL ─────────────────────────────── */
-  .panel-archive-title {
-    position: absolute;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 36px 32px;
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    box-shadow: 0 8px 40px rgba(0,0,0,.5);
-    width: auto !important;
-    height: auto !important;
-    max-width: 600px;
-    min-width: 280px;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  .panel-archive-title:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
-  }
+  /* ── ARCHIVE TITLE ── */
+  .panel-archive-title { position:absolute; z-index:10; display:flex; flex-direction:column; justify-content:flex-start; padding:36px 32px; background:var(--panel-bg); border:1px solid var(--border); border-radius:2px; box-shadow:0 8px 40px rgba(0,0,0,.5); width:auto!important; height:auto!important; max-width:600px; min-width:280px; transition:border-color .2s,box-shadow .2s; }
+  .panel-archive-title:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent),0 12px 60px rgba(200,169,110,.12); }
   .panel-archive-title .panel-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:14px; }
   .panel-archive-title .panel-title { font-size:22px; font-weight:600; color:var(--text); line-height:1.25; margin-bottom:18px; }
   .panel-archive-title .panel-sub   { font-size:13px; color:var(--text); line-height:1.75; }
-  .panel-archive-title .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin: 20px 0; }
+  .panel-archive-title .text-rule   { width:40px; height:1px; background:var(--accent); opacity:.4; margin:20px 0; }
 
-  /* ── ARCHIVE GRID SECTION ────────────────────────────── */
-  .archive-grid {
-    position: absolute;
-    z-index: 10;
-    display: grid;
-    grid-template-columns: repeat(4, 280px);
-    grid-template-rows: repeat(2, auto);
-    gap: 16px;
-    visibility: hidden;
-  }
-  .archive-cell {
-    display: flex;
-    flex-direction: column;
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    box-shadow: 0 8px 40px rgba(0,0,0,.5);
-    transition: border-color .2s, box-shadow .2s, transform .2s;
-  }
-  .archive-cell:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 12px 60px rgba(200,169,110,.12);
-    transform: translateY(-4px);
-    z-index: 20;
-  }
+  /* ── ARCHIVE GRID ── */
+  .archive-grid { position:absolute; z-index:10; display:grid; grid-template-columns:repeat(4,280px); grid-template-rows:repeat(2,auto); gap:16px; visibility:hidden; }
+  .archive-cell { display:flex; flex-direction:column; background:var(--panel-bg); border:1px solid var(--border); border-radius:2px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.5); transition:border-color .2s,box-shadow .2s,transform .2s; cursor:pointer; }
+  .archive-cell:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent),0 12px 60px rgba(200,169,110,.12); transform:translateY(-4px); z-index:20; }
   .archive-cell-img { width:100%; aspect-ratio:3/2; height:auto; display:block; flex-shrink:0; object-fit:cover; }
-  .archive-cell-meta { padding: 14px 16px 16px; border-top: 1px solid var(--border); }
+  .archive-cell-meta { padding:14px 16px 16px; border-top:1px solid var(--border); }
   .archive-cell-tag   { font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:6px; }
   .archive-cell-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:4px; }
   .archive-cell-desc  { font-size:11px; color:var(--text); line-height:1.5; }
 
-  /* ── OPENING GALLERY TITLE ───────────────────────────── */
-  #opening-title {
-    position: absolute;
-    z-index: 10;
-    text-align: center;
-    white-space: nowrap;
-    transform: translateX(-50%);
-    top: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-  }
-  #opening-title .title-line1 {
-    font-family: 'Orbitron', 'Courier New', monospace;
-    font-size: 62px;
-    font-weight: 900;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    background: linear-gradient(135deg, #e8e4dc 0%, #c8a96e 45%, #7b9cff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.1;
-    filter: drop-shadow(0 0 32px rgba(123,156,255,0.35));
-  }
-  #opening-title .title-line2 {
-    font-family: 'Orbitron', 'Courier New', monospace;
-    font-size: 28px;
-    font-weight: 400;
-    letter-spacing: .42em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-top: 14px;
-    opacity: .9;
-    filter: drop-shadow(0 0 18px rgba(200,169,110,0.4));
-  }
-  #opening-title .title-text-area {
-    margin-top: 32px;
-    max-width: 900px;
-    white-space: normal;
-    text-align: center;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 18px;
-    line-height: 1.75;
-    color: var(--text);
-    opacity: .85;
-    pointer-events: none;
-  }
-
-  /* ── SECTION LABELS ──────────────────────────────────── */
-  .section-label {
-    position: absolute;
-    top: 32px;
-    font-size: 9px;
-    letter-spacing: .24em;
-    text-transform: uppercase;
-    color: var(--muted);
-    z-index: 3;
-    transform: translateX(-50%);
-  }
+  /* ── OPENING TITLE ── */
+  #opening-title { position:absolute; z-index:10; text-align:center; white-space:nowrap; transform:translateX(-50%); top:40px; display:flex; flex-direction:column; align-items:center; gap:0; }
+  #opening-title .title-line1 { font-family:'Orbitron','Courier New',monospace; font-size:62px; font-weight:900; letter-spacing:.18em; text-transform:uppercase; background:linear-gradient(135deg,#e8e4dc 0%,#c8a96e 45%,#7b9cff 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.1; filter:drop-shadow(0 0 32px rgba(123,156,255,0.35)); }
+  #opening-title .title-line2 { font-family:'Orbitron','Courier New',monospace; font-size:28px; font-weight:400; letter-spacing:.42em; text-transform:uppercase; color:var(--accent); margin-top:14px; opacity:.9; filter:drop-shadow(0 0 18px rgba(200,169,110,0.4)); }
+  #opening-title .title-text-area { margin-top:32px; max-width:900px; white-space:normal; text-align:center; font-family:'Helvetica Neue',Arial,sans-serif; font-size:18px; line-height:1.75; color:var(--text); opacity:.85; pointer-events:none; }
 </style>
 </head>
 <body>
 
-<!-- HUD -->
 <div id="hud">
   <div class="studio-label">270° Immersive Studio</div>
   <div class="studio-dims">12312 × 1080 px</div>
   <div class="studio-angle" id="angle-readout">0°</div>
 </div>
 
-<!-- MINIMAP -->
 <div id="minimap-wrap">
   <div id="minimap-label">Studio Overview</div>
   <div id="minimap">
@@ -658,712 +142,401 @@
   </div>
 </div>
 
-<!-- CONTROLS -->
 <div id="controls">
-  <button class="ctrl-btn" id="btn-left" title="Scroll left">&#8592;</button>
-  <button class="ctrl-btn" id="btn-right" title="Scroll right">&#8594;</button>
+  <button class="ctrl-btn" id="btn-left">&#8592;</button>
+  <button class="ctrl-btn" id="btn-right">&#8594;</button>
 </div>
 
-<!-- STUDIO VIEWPORT -->
 <div id="studio-viewport">
   <div id="studio-canvas">
     <div id="studio-bg"></div>
     <div id="floor-line"></div>
-    <div id="hero-banner">
-      <h1></h1>
-      <p></p>
-    </div>
   </div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════
-   CONFIGURATION
-═══════════════════════════════════════════════════════ */
 const CANVAS_W = 12312;
 const CANVAS_H = 1080;
 const DEGREES  = 270;
 
-/* Escape plain text for safe insertion into innerHTML */
 function esc(s) {
   return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* Placeholder exhibit data — replace image srcs with real URLs */
 const EXHIBIT_DATA = [
-  // SECTION 4 — Motion & Time
   { section:'Motion & Time', tag:'The Setting', title:'The Cold War and the Space Race', desc:'At the end of the Second World War, scientific and technical breakthroughs brought on by the war allowed for beginning of space exploration. However, space was the great unknown. Scientist\'s were unsure if the human body could even survive in microgravity. Rocket technology also a new science. By 1960 the United States was only managing just over a 50 percent success rate for launches. Given the technical challenges of even getting to space and the unknown medical factors that could impact human astronauts, animal testing was seen as a logical solution. As early rockets could only carry small payloads, monkeys and small dogs were seen as ideal passengers.<br><br> The nature of space exploration changed on October 4th, 1957 when the The USSR shocked the world with the successful launch of the world\'s first artificial satellite in October 1957. Until that time, the United States was confident of being well ahead of the Soviet Union in technology. In the fraught geopolitics of the time, prestige was on the line, as both nations were competing to tilt the world order in their favor. Space became another battleground in the conflict. By 1961 President John F. Kennedy committed the United States to landing on the Moon by the end of the decade. The Space Race has begun in earnest. To satisfy both scientific and political demands, but also to protect human life, animal astronauts were first into space.', x:1480, y:200, w:200, h:440, hue:[220,250], textOnly:true },
-  { section:'Motion & Time', tag:'The Space Age', title:'The Beginning', desc:'Albert I, the first mammal to be launched on a rocket in 1948. The rocket failed to reach space due to an engine failure. Albert I did not survive the mission and no useful data was recorded from the biomedical monitors. His successor Albert II would become the first manmmal in space but would also not survive his flight.', x:2140, y:200, w:300, h:440, hue:[160,200], imgSrc:'images/alberti.png' },
+  { section:'Motion & Time', tag:'The Space Age', title:'The Beginning', desc:'Albert I, the first mammal to be launched on a rocket in 1948. The rocket failed to reach space due to an engine failure. Albert I did not survive the mission and no useful data was recorded from the biomedical monitors. His successor Albert II would become the first mammal in space but would also not survive his flight.', x:2140, y:200, w:300, h:440, hue:[160,200], imgSrc:'images/alberti.png' },
 
-  // SECTION 2 — Material Studies
-  { section:'Material Studies', tag:'Economics', title:'Big Sky, Small Spaces', desc:'It remains expensive to send things into space, and for early testing, smaller, cheaper versions of rockets were used. The Little Joe capsules were used to test systems for the Mercury launch as well as to send monkey\'s into space', x:2560, y:200, w:360, h:440, hue:[25,45], imgSrc:'images/little_joe.webp' },
+  { section:'Material Studies', tag:'Economics', title:'Big Sky, Small Spaces', desc:'It remains expensive to send things into space, and for early testing, smaller, cheaper versions of rockets were used. The Little Joe capsules were used to test systems for the Mercury launch as well as to send monkeys into space.', x:2560, y:200, w:360, h:440, hue:[25,45], imgSrc:'images/little_joe.webp' },
   { section:'Material Studies', tag:'Political Concerns', title:'Propaganda', desc:'Both the United States and Soviet Union attempted to leverage their successes in space by producing space related stamps, momentos, and other objects to aid in their respective campaigns to present their technological prowess, and by extension ideology, as superior.', x:2960, y:200, w:360, h:440, hue:[35,55], imgSrc:'images/laika_stamp.jpg' },
-  { section:'Material Studies', tag:'Medicial Data', title:'', desc:'The animals sent into space not only tested the safety of equipment, they provided valuable data about the reaction of a living creature to the stresses of spaceflight. This image is a section of biomedical telelmtry from Soviet space dog Laika\'s trip, showing accerated breathing, which was to be expected in such a stressful situation.', x:3360, y:200, w:360, h:440, hue:[190,230], imgSrc:'images/laika_telemetry.jpg' },
-  
-  // SECTION 3 — Architectures
-  // Videos load from the online "videos/" folder (same pattern as "images/").
-  // Rename the cat file below to match your actual filename.
-  { section:'Architectures', tag:'Cat Flight School', title:'Training and Flight', desc:'French space agency documentary footage of Félicette and her fellow cats being prepared and trained for the rigors of spaceflight. Early testing tended to treat animal subjects as tools, much like the rockets that carried them into space. credit: Institut national de l\'audiovisue', x:3840, y:200, w:360, h:440, hue:[200,240], videoSrc:'videos/cats.mp4' },
-  { section:'Architectures', tag:'Which Way is Up', title:'Birds in Space', desc:'A 1990 experiment aboard the Soviet space station Mir hatched eight Japanese quails, which were also the first vetebrate animals to be born off-world. Earlier experiments in 1979 to hatch quails had resulted in deformities, as radiation and high temperatures had likely impacted their development. The Mir birds struggled to eat and move, as a lack of gravity was inherently hostile to avian life. Harnesses were rigged to give the birds some stability. Few survived the return and those that lived were euthanized for study. Later quails born in space that survived the return were not able to adapt to conditions on Earth. In the words of a Soviet researcher, they were "defeated by gravity." credit: Soviet Space Program', x:4240, y:200, w:360, h:440, hue:[250,290], videoSrc:'videos/quails.mp4' },
-  { section:'Architectures', tag:'Of Mice and Men', title:'Mice in Space', desc:'Mice adapt well to microgravity, and give reseachers insight to the physical problems facing astronauts on long missions. Mice in space display unique behavors, including what NASA scientests call \"race-tracking,\" where the mice run in groups along the walls of their test enclosure. credit: NASA', x:4640, y:200, w:360, h:440, hue:[40,70], videoSrc:'videos/mice.mp4' },
+  { section:'Material Studies', tag:'Medical Data', title:'Biotelemetry', desc:'The animals sent into space not only tested the safety of equipment, they provided valuable data about the reaction of a living creature to the stresses of spaceflight. This image is a section of biomedical telemetry from Soviet space dog Laika\'s trip, showing accelerated breathing, which was to be expected in such a stressful situation.', x:3360, y:200, w:360, h:440, hue:[190,230], imgSrc:'images/laika_telemetry.jpg' },
 
-  // SECTION 5 — Colour Field (Félicette)
-  { section:'Colour Field', tag:'A Cat in Space', title:'Félicette, France', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful leading to the death of the unnamed feline, and France moved on to other animals for spaceflight testing. With no futher need for them, the remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette perched atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth\'s first, and so far only, cat astronaut.', x:5120, y:200, hue:[330,360], textOnly:true },
+  { section:'Architectures', tag:'Cat Flight School', title:'Training and Flight', desc:'French space agency documentary footage of Félicette and her fellow cats being prepared and trained for the rigors of spaceflight. Early testing tended to treat animal subjects as tools, much like the rockets that carried them into space. credit: Institut national de l\'audiovisuel', x:3840, y:200, w:360, h:440, hue:[200,240], videoSrc:'videos/felicette.mp4' },
+  { section:'Architectures', tag:'Which Way is Up', title:'Birds in Space', desc:'A 1990 experiment aboard the Soviet space station Mir hatched eight Japanese quails, which were also the first vertebrate animals to be born off-world. Earlier experiments in 1979 to hatch quails had resulted in deformities, as radiation and high temperatures had likely impacted their development. The Mir birds struggled to eat and move, as a lack of gravity was inherently hostile to avian life. Harnesses were rigged to give the birds some stability. Few survived the return and those that lived were euthanized for study. Later quails born in space that survived the return were not able to adapt to conditions on Earth. In the words of a Soviet researcher, they were "defeated by gravity." credit: Soviet Space Program', x:4240, y:200, w:360, h:440, hue:[250,290], videoSrc:'videos/quails.mp4' },
+  { section:'Architectures', tag:'Of Mice and Men', title:'Mice in Space', desc:'Mice adapt well to microgravity, and give researchers insight to the physical problems facing astronauts on long missions. Mice in space display unique behaviors, including what NASA scientists call "race-tracking," where the mice run in groups along the walls of their test enclosure. credit: NASA', x:4640, y:200, w:360, h:440, hue:[40,70], videoSrc:'videos/mice.mp4' },
+
+  { section:'Colour Field', tag:'A Cat in Space', title:'Félicette, France', desc:'Félicette, originally named C341, was one of fourteen female cats selected by the French space agency CNES as candidates for spaceflight. In preparation for the mission, the cats underwent a two-month training regimen and had electrodes permanently embedded in their skulls. Chosen from among her fellow cats for her calm demeanor and "appropriate" weight, Félicette was launched into space at the Centre Interarmées D\'essais D\'engins Spéciaux site in Algeria atop a Véronique AGI 47 rocket on October 18, 1963 at 8:09 am. The sub-orbital flight lasted 13 minutes, reaching a height of 94 miles (152 kilometers). During that time, Félicette experienced five minutes of weightlessness and was subjected to electrical impulses to her electrodes to stimulate brain and muscle activity. After her safe return, the press gave her the name Félicette, after the cartoon character Felix the Cat.<br><br>While Félicette survived her voyage into space, the decision was made to euthanize her two months later for study. Reports indicate no useful data was obtained from the ensuing necropsy. A second attempted launch with a cat aboard was unsuccessful leading to the death of the unnamed feline, and France moved on to other animals for spaceflight testing. With no further need for them, the remaining cats were euthanized.<br><br>Félicette\'s story remained relatively unknown compared to the Russian space dog Laika or the American space chimps, but in 2017 a crowdfunded effort was launched to create a memorial to her journey. Completed in 2018, the sculpture depicts Félicette perched atop a globe, looking up at the skies she once visited, commemorating the flight and sacrifice of Earth\'s first, and so far only, cat astronaut.', x:5120, y:200, hue:[330,360], textOnly:true },
   { section:'Colour Field', tag:'Gradient', title:'Atmospheric Band', desc:'', anchoredTo:'Félicette, France', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[30,60],
     cells:[
-      { tag:'Gradient', title:'Commemorative photo',   desc:'A photo taken after Félicette\'s flight, thanking people for their support, with her implanted electrodes visible. photo credit: CNES', hue:[30,50],  imgSrc:'images/felicette_postcard.jpg' },
-      { tag:'Gradient', title:'Cat\'s in the Cradle',  desc:'Félicette in her cradle, about to be loaded onto a sealed container in the nose of the Véronique rocket.', hue:[40,65],  imgSrc:'images/felicette_cradle.jpg' },
-      { tag:'Gradient', title:'Félicette and Véronique', desc:'Workers prepare the cat-sized habitat compartment of the Véronique rocket shortly before liftoff.', hue:[50,75],  imgSrc:'images/felicette_nose.jpg' },
-      { tag:'Gradient', title:'Memorial',  desc:'The memorial to Félicette, at the International Space University in Strasbourg, France. photo credit: space.com', hue:[25,45],  imgSrc:'images/felicette_spacecom.jpg' },
+      { tag:'Gradient', title:'Commemorative photo',      desc:'A photo taken after Félicette\'s flight, thanking people for their support, with her implanted electrodes visible. photo credit: CNES', hue:[30,50], imgSrc:'images/felicette_postcard.jpg' },
+      { tag:'Gradient', title:"Cat's in the Cradle",      desc:'Félicette in her cradle, about to be loaded onto a sealed container in the nose of the Véronique rocket.', hue:[40,65], imgSrc:'images/felicette_cradle.jpg' },
+      { tag:'Gradient', title:'Félicette and Véronique',  desc:'Workers prepare the cat-sized habitat compartment of the Véronique rocket shortly before liftoff.', hue:[50,75], imgSrc:'images/felicette_nose.jpg' },
+      { tag:'Gradient', title:'Memorial',                 desc:'The memorial to Félicette, at the International Space University in Strasbourg, France. photo credit: space.com', hue:[25,45], imgSrc:'images/felicette_spacecom.jpg' },
     ]
   },
 
-  // SECTION 6 — Figures (Laika)
-  { section:'Figures', tag:'Dog Star', title:'Laika, Soviet Union', desc:'Laika was a dog found on the streets of Moscow, one of three strays picked up to potentially serve as the first animal to orbit the earth. Soviet space officials believed that stray dogs would be suitable test subjects for spaceflight as they were used to harsh conditions and extended periods of hunger. The decision was made to go with Laika for the mission aboard a Sputnik 2, a rapidly designed spacecraft built to satisfy the political desires of the Kremlin to achieve another space first. As space travel was a new frontier and spacecraft design was in its infancy, Sputnik 2 had no ability to return to Earth: Laika\'s flight was a one-way ticket. Before the launch, Soviet scientist Vladimir Yazdovsky brought Laika to play with his children. He later wrote, "I wanted to do something nice for her: She had so little time left to live."<br><br>On the morning of November 3, 1959, Laika lifted off from the Baikonur Cosmodrome, becoming the first animal to orbit the earth. Recorded data shows Laika was highly stressed but eating her specially prepared food. Her voyage was short-lived; Laika died five to seven hours after achieving orbit, most likely due to overheating from a failed module separation and inadequate temperature regulation systems, as Sputnik 2 was hastily constructed. Soviet agencies gave conflicting reports on Laika\'s death, with her ultimate fate not being widely known until after the collapse of the Soviet Union. On April 14, 1957, the Sputnik 2 rocket with Laika\'s remains aboard disintegrated during re-entry after orbiting the earth 2570 times.<br><br>As the first dog to orbit the earth, Laika has become imbedded in popular culture through songs, movies, books, and even stamps. In 2008 a new memorial was unveiled in Moscow, depicting Laika as bright and attentive atop a rocket that transforms into a grasping hand, symbolizing her role in humanities\' reach for the stars.', x:6252, y:200, hue:[200,230], textOnly:true },
+  { section:'Figures', tag:'Dog Star', title:'Laika, Soviet Union', desc:'Laika was a dog found on the streets of Moscow, one of three strays picked up to potentially serve as the first animal to orbit the earth. Soviet space officials believed that stray dogs would be suitable test subjects for spaceflight as they were used to harsh conditions and extended periods of hunger. The decision was made to go with Laika for the mission aboard Sputnik 2, a rapidly designed spacecraft built to satisfy the political desires of the Kremlin to achieve another space first. As space travel was a new frontier and spacecraft design was in its infancy, Sputnik 2 had no ability to return to Earth: Laika\'s flight was a one-way ticket. Before the launch, Soviet scientist Vladimir Yazdovsky brought Laika to play with his children. He later wrote, "I wanted to do something nice for her: She had so little time left to live."<br><br>On the morning of November 3, 1957, Laika lifted off from the Baikonur Cosmodrome, becoming the first animal to orbit the earth. Recorded data shows Laika was highly stressed but eating her specially prepared food. Her voyage was short-lived; Laika died five to seven hours after achieving orbit, most likely due to overheating from a failed module separation and inadequate temperature regulation systems, as Sputnik 2 was hastily constructed. Soviet agencies gave conflicting reports on Laika\'s death, with her ultimate fate not being widely known until after the collapse of the Soviet Union. On April 14, 1958, the Sputnik 2 rocket with Laika\'s remains aboard disintegrated during re-entry after orbiting the earth 2570 times.<br><br>As the first dog to orbit the earth, Laika has become embedded in popular culture through songs, movies, books, and even stamps. In 2008 a new memorial was unveiled in Moscow, depicting Laika as bright and attentive atop a rocket that transforms into a grasping hand, symbolizing her role in humanity\'s reach for the stars.', x:6432, y:200, hue:[200,230], textOnly:true },
   { section:'Figures', tag:'Form', title:'Silhouette Archive', desc:'', anchoredTo:'Laika, Soviet Union', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[260,300],
     cells:[
-      { tag:'Form', title:'A Moscow Street Dog',   desc:'Laika in front of a mock version of the Sputnik 2 cradle. photo credit: National Air and Space Museum', hue:[260,290], imgSrc:'images/laika_cradle.webp' },
-      { tag:'Form', title:'Speed over Safety',  desc:'A replica of Sputnik 2, showing the extremely small confines of the spacecraft. Small dogs and monkeys were early test subjects partly due to their miniature stature. photo credit: RCS Energia', hue:[270,300], imgSrc:'images/laika_sputnik.webp' },
-      { tag:'Form', title:'Man\'s Best Friend', desc:'Laika, the first animal to orbit the Earth. photo credit: Museum Cosmonautica', hue:[250,280], imgSrc:'images/Laika_1957.jpg' },
-      { tag:'Form', title:'In Gratitude',  desc:'The memorial to Laika and Soviet space dogs in Moscow. Hotel Kaesong, Flickr', hue:[280,310], imgSrc:'images/laika_memorial.JPG' },
+      { tag:'Form', title:'A Moscow Street Dog', desc:'Laika in front of a mock version of the Sputnik 2 cradle. photo credit: National Air and Space Museum', hue:[260,290], imgSrc:'images/laika_cradle.webp' },
+      { tag:'Form', title:'Speed over Safety',   desc:'A replica of Sputnik 2, showing the extremely small confines of the spacecraft. Small dogs and monkeys were early test subjects partly due to their miniature stature. photo credit: RCS Energia', hue:[270,300], imgSrc:'images/laika_sputnik.webp' },
+      { tag:'Form', title:"Man's Best Friend",   desc:'Laika, the first animal to orbit the Earth. photo credit: Museum Cosmonautica', hue:[250,280], imgSrc:'images/Laika_1957.jpg' },
+      { tag:'Form', title:'In Gratitude',        desc:'The memorial to Laika and Soviet space dogs in Moscow. Hotel Kaesong, Flickr', hue:[280,310], imgSrc:'images/laika_memorial.JPG' },
     ]
   },
 
-  // SECTION 7 — Landscape (Ham)
-  { section:'Landscape', tag:'Astrochimp', title:'Ham, United States', desc:'Ham, originally named No.65, was a chimpanzee purchased by the United States Air Force as one of forty spaceflight candidates. The space chimp program represented the next step in animal spaceflight as due to their biological similarities, their ability to learn from stimulus and instruction, and a reaction speed that was comparable to human pilots, apes could teach researchers much about the human potential to survive and operate in space. Like Félicette, Ham was given a number designation instead of a name to minimize the negative press from any fatal incident, although he was unofficially known as Ham to his trainers and the NASA team.<br><br>Ham and his fellow candidates were trained to push levers upon seeing a flashing light on a control panel. If he carried out his task he received a banana pellet; if he did not, an electric shock was administered.<br><br>On January 31, 1961, Ham flew into space from Cape Canaveral on a Mercury-Redstone 2 launch vehicle. His suborbital flight lasted sixteen minutes and thirty-nine seconds, during which time he responded to the control panel lights as he was trained to do, showing his reaction time in space was almost the same as back on Earth. As part of Project Mercury, his mission also served to test vital safety and environmental components for Alan Shepard\'s mission three months later.<br><br>After his return, Ham was officially named after the Holloman Aerospace Medical (HAM) Center and the commander of Holloman Aeromedical Laboratory, Lieutenant Colonel Hamilton "Ham" Blackshear. In 1963 he was sent to the National Zoo in Washington D.C. and later moved to the North Carolina Zoo. Ham died on January 19, 1983 and a historical marker near the zoo commemorates his brief flight into space.', x:7384, y:200, hue:[180,220], textOnly:true },
+  { section:'Landscape', tag:'Astrochimp', title:'Ham, United States', desc:'Ham, originally named No.65, was a chimpanzee purchased by the United States Air Force as one of forty spaceflight candidates. The space chimp program represented the next step in animal spaceflight as due to their biological similarities, their ability to learn from stimulus and instruction, and a reaction speed that was comparable to human pilots, apes could teach researchers much about the human potential to survive and operate in space. Like Félicette, Ham was given a number designation instead of a name to minimize the negative press from any fatal incident, although he was unofficially known as Ham to his trainers and the NASA team.<br><br>Ham and his fellow candidates were trained to push levers upon seeing a flashing light on a control panel. If he carried out his task he received a banana pellet; if he did not, an electric shock was administered.<br><br>On January 31, 1961, Ham flew into space from Cape Canaveral on a Mercury-Redstone 2 launch vehicle. His suborbital flight lasted sixteen minutes and thirty-nine seconds, during which time he responded to the control panel lights as he was trained to do, showing his reaction time in space was almost the same as back on Earth. As part of Project Mercury, his mission also served to test vital safety and environmental components for Alan Shepard\'s mission three months later.<br><br>After his return, Ham was officially named after the Holloman Aerospace Medical (HAM) Center and the commander of Holloman Aeromedical Laboratory, Lieutenant Colonel Hamilton "Ham" Blackshear. In 1963 he was sent to the National Zoo in Washington D.C. and later moved to the North Carolina Zoo. Ham died on January 19, 1983 and a historical marker near the zoo commemorates his brief flight into space.', x:7564, y:200, hue:[180,220], textOnly:true },
   { section:'Landscape', tag:'Scale', title:'Aerial Survey', desc:'', anchoredTo:'Ham, United States', gap:20, relY:200, quadGrid:true, cellSize:220, hue:[100,140],
     cells:[
-      { tag:'Scale', title:'NASA Employee Ham',   desc:'Ham wearing a NASA hardhat and strapped into his capsules flight couch. photo credit: NASA', hue:[100,130], imgSrc:'images/ham_hard_hat.jpg' },
-      { tag:'Scale', title:'Launch Day',  desc:'Ham, locked into his flight couch on the day of his launch. photo credit: NASA', hue:[110,140], imgSrc:'images/ham_cradle.jpg' },
-      { tag:'Scale', title:'Go for Launch', desc:'Ham lifts off on top of a Mercury-Redstone launch vehicle, the same type of rocket that will send Alan Shepherd into space three months later. photo credit: NASA', hue:[90,120],  imgSrc:'images/ham_mercury.jpg' },
-      { tag:'Scale', title:'Space Force Museum Exhibit',  desc:'Of the eight space monkeys and chimps pictured in the exhibit, four did not survive their missions. photo credit: D.Fandino', hue:[120,150], imgSrc:'images/museum_chimps.jpg' },
+      { tag:'Scale', title:'NASA Employee Ham',         desc:'Ham wearing a NASA hardhat and strapped into his capsule\'s flight couch. photo credit: NASA', hue:[100,130], imgSrc:'images/ham_hard_hat.jpg' },
+      { tag:'Scale', title:'Launch Day',                desc:'Ham, locked into his flight couch on the day of his launch. photo credit: NASA', hue:[110,140], imgSrc:'images/ham_cradle.jpg' },
+      { tag:'Scale', title:'Go for Launch',             desc:'Ham lifts off on top of a Mercury-Redstone launch vehicle, the same type of rocket that will send Alan Shepard into space three months later. photo credit: NASA', hue:[90,120], imgSrc:'images/ham_mercury.jpg' },
+      { tag:'Scale', title:'Space Force Museum Exhibit', desc:'Of the eight space monkeys and chimps pictured in the exhibit, four did not survive their missions. photo credit: D.Fandino', hue:[120,150], imgSrc:'images/museum_chimps.jpg' },
     ]
   },
 
-  // SECTION 8 — Archive
-  { section:'The Archive', tag:'Memory', title:'In Popular Culture', desc:'Primates and dogs featured primarily in the early years of space exploration, as the last American chimp to travel to space was Enos in 1961. However, the cultural impact of animal astronauts has been long lasting. Due to the geopolitical significance of the Space Race, the vivid images of animal astronauts such as Laika and Ham, and a very natural human tendency to relate to animals, depictions of animals in space still lean heavily on the idea of chimps and dogs. It only seems natural that as humans travel to space, they bring along companions and helpers. These cultural depictions show animal astranuts as partners in exploration, often humanizing them to a degree beyond what their real-world counterparts were afforded. Frequently, space animals are often shown wearing spacesuits, further humanizing them and instilling the idea the animals were fellow astronauts. Perhaps this too fulfills our need to rewrite the past, to escape the consequences of our actions by finding a happy ending for the animal explorers that were sacrificed for progress, choosing to remember them as friends instead of test subjects.', x:8516, y:200, hue:[40,65], textOnly:true, archiveTitle:true },
-  { section:'The Archive', gridSection:true, x:8516, anchoredToArchiveTitle:true, gap:20,
+  { section:'The Archive', tag:'Memory', title:'In Popular Culture', desc:'Primates and dogs featured primarily in the early years of space exploration, as the last American chimp to travel to space was Enos in 1961. However, the cultural impact of animal astronauts has been long lasting. Due to the geopolitical significance of the Space Race, the vivid images of animal astronauts such as Laika and Ham, and a very natural human tendency to relate to animals, depictions of animals in space still lean heavily on the idea of chimps and dogs. It only seems natural that as humans travel to space, they bring along companions and helpers. These cultural depictions show animal astronauts as partners in exploration, often humanizing them to a degree beyond what their real-world counterparts were afforded. Frequently, space animals are often shown wearing spacesuits, further humanizing them and instilling the idea the animals were fellow astronauts. Perhaps this too fulfills our need to rewrite the past, to escape the consequences of our actions by finding a happy ending for the animal explorers that were sacrificed for progress, choosing to remember them as friends instead of test subjects.', x:8696, y:200, hue:[40,65], textOnly:true, archiveTitle:true },
+  { section:'The Archive', gridSection:true, anchoredToArchiveTitle:true, gap:20,
     items:[
-      { tag:'Movie:', title:'Guardians of the Galaxy Vol.3 (2023)',  desc:'Cosmo the Space Dog is modeled directly on Laika. As with her real-world inspiration, Cosmo was sent into space by the Soviet Union, and her suit still bears the CCCP logo. Notably, Cosmo is part of a trend in popular culture depicting happy endings for animal space pioneers. photo credit: The Walt Disney Company', hue:[40,65], imgSrc:'images/cosmo_guardians.webp' },
-      { tag:'Music video', title:'Top of the World (2012)', desc:'In this music video, a group of silver spaceuit clad Russian cosmonauts with a monkey (also in a little pressure suit) watch an American moon launch, harkening to the lasting idea of space monkeys in early space exploration, despite the fact the Soviet Union did not launch primates into space until the 1980s. photo credit: kidinakorner', hue:[35,55], imgSrc:'images/imagine_dragons_monkey.jpg' },
-      { tag:'Print',    title:'Fantastic Four #13 (1963)', desc:'Soviet scientist Ivan Kragoff, obssessed with beating the US to the moon, replicates the Fantastic Four\'s spaceflight, which gives him and his crew of trained apes abnormal powers. Now calling themselves the Red Ghost and the Super Apes, they promptly use their powers for evil. The Red Ghost is emblematic of Cold War competition between the US and the USSR. photo credit: The Walt Disney Company', hue:[260,300], imgSrc:'images/red_ghost.jpeg' },
-      { tag:'Television: The Umbrella Academy (2019)', title:'Pogo', desc:'The origin story of Pogo, headmaster of the Umbrella Academy, mirrors that of astrochimp Ham. After being seriously injured during a 1950s era test flight, Pogo is injected with an experimental serum that saves his life and gives him mental powers and acuity far beyond those of humans. photo credit: Netflix', hue:[50,75], imgSrc:'images/umbrella_academy.png' },
+      { tag:'Movie', title:'Guardians of the Galaxy Vol.3 (2023)', desc:'Cosmo the Space Dog is modeled directly on Laika. As with her real-world inspiration, Cosmo was sent into space by the Soviet Union, and her suit still bears the CCCP logo. Notably, Cosmo is part of a trend in popular culture depicting happy endings for animal space pioneers. photo credit: The Walt Disney Company', hue:[40,65], imgSrc:'images/cosmo_guardians.webp' },
+      { tag:'Music Video', title:'Top of the World (2012)', desc:'In this music video, a group of silver spacesuit clad Russian cosmonauts with a monkey (also in a little pressure suit) watch an American moon launch, harkening to the lasting idea of space monkeys in early space exploration, despite the fact the Soviet Union did not launch primates into space until the 1980s. photo credit: kidinakorner', hue:[35,55], imgSrc:'images/imagine_dragons_monkey.jpg' },
+      { tag:'Print', title:'Fantastic Four #13 (1963)', desc:'Soviet scientist Ivan Kragoff, obsessed with beating the US to the moon, replicates the Fantastic Four\'s spaceflight, which gives him and his crew of trained apes abnormal powers. Now calling themselves the Red Ghost and the Super Apes, they promptly use their powers for evil. The Red Ghost is emblematic of Cold War competition between the US and the USSR. photo credit: The Walt Disney Company', hue:[260,300], imgSrc:'images/red_ghost.jpeg' },
+      { tag:'Television', title:'The Umbrella Academy: Pogo (2019)', desc:'The origin story of Pogo, headmaster of the Umbrella Academy, mirrors that of astrochimp Ham. After being seriously injured during a 1950s era test flight, Pogo is injected with an experimental serum that saves his life and gives him mental powers and acuity far beyond those of humans. photo credit: Netflix', hue:[50,75], imgSrc:'images/umbrella_academy.png' },
       { tag:'Literature', title:'Space Cat (1952)', desc:'After being adopted by a space program pilot, a gray cat named Flyball stows away on an experimental rocket (very cat behavior), becoming the titular space cat. Flyball eventually explores Mars and Venus, marries a Martian cat, and raises two kittens while keeping his human captain company. photo credit: Charles Scribner', hue:[200,230], imgSrc:'images/space_cat.jpg' },
       { tag:'Film', title:'Robinson Crusoe on Mars (1964)', desc:'The first mission to Mars ends in near-disaster, leaving co-pilot Kit Draper and monkey Mona as the only survivors. While Mona proves helpful at points during the film, the reasoning for having a monkey aboard the first Martian expedition is more a nod to the extensive news coverage of primates in the early American space program, which made their future participation as partners in exploration seem plausible. photo credit: Paramount Pictures', hue:[30,60], imgSrc:'images/crusoe_monkey.png' },
-      { tag:'Film', title:'Ad Astra (2019)',       desc:'In a darker, horror-inflected vision of animals in space, As Astra features an abandoned Norweigan research station occupied by drill monkeys, driven to murderous rage from their isolation and the experimentation done on them. The film asks what are the consequences of our drive to explore a frontier that is hostile to life itself. photo credit:20th Century Fox', hue:[45,70], imgSrc:'images/ad_astra.jpg' },
-      { tag:'Film',  title:'Alien (1979)',        desc:'Jones is the UNSCSS Nostromo\'s ship\'s cat, a member of the working class crew of the ship. Jonesy served as a companion, pet, and mouser in the sterile, mechanical environment of the ship. His role aboard the Nostrome reflects the actual use of cats on seagoing vessels, while also emphasizing the film\'s vision of space travel as a normal job. photo credit:20th Century Fox', hue:[220,255], imgSrc:'images/Jones_alien.webp' },
+      { tag:'Film', title:'Ad Astra (2019)', desc:'In a darker, horror-inflected vision of animals in space, Ad Astra features an abandoned Norwegian research station occupied by drill monkeys, driven to murderous rage from their isolation and the experimentation done on them. The film asks what are the consequences of our drive to explore a frontier that is hostile to life itself. photo credit: 20th Century Fox', hue:[45,70], imgSrc:'images/ad_astra.jpg' },
+      { tag:'Film', title:'Alien (1979)', desc:'Jones is the USCSS Nostromo\'s ship\'s cat, a member of the working class crew of the ship. Jonesy served as a companion, pet, and mouser in the sterile, mechanical environment of the ship. His role aboard the Nostromo reflects the actual use of cats on seagoing vessels, while also emphasizing the film\'s vision of space travel as a normal job. photo credit: 20th Century Fox', hue:[220,255], imgSrc:'images/Jones_alien.webp' },
     ]
   },
 
-  // SECTION 9 — Closing
-  { section:'Closing Room', tag:'Coda', title:'Triumph and Tragedy', desc:'If we die we want people to accept it. We are in a risky business, and we hope that if anything happens to us, it will not delay the program. The conquest of space is worth the risk of life. <br><br> NASA Astronaut Gus Grissom <br>br> In the modern day the commercialization of space exploration has made the extraordinary almost seem routine. Celebrities and civilians can travel to spaceThe many successes of . Imperative to remember space is a dangerous venturew, and it would have been even more dangerous were it not for the sacrifices of animal astronauts, who were While these animal pioneers did not understand the , they contriubte.', x:10364, y:200, hue:[330,360], textOnly:true },
-
-  // Sedimentation — after Afterimage
-  { section:'Material Studies', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:10824, y:200, w:360, h:440, hue:[60,90], imgSrc:'images/space_cat_nap.jpg' },
+  { section:'Closing Room', tag:'Coda', title:'Triumph and Tragedy', desc:'What persists when you close your eyes — the retina\'s own exhibition.', x:10444, y:200, hue:[330,360], textOnly:true },
+  { section:'Closing Room', tag:'Texture', title:'Sedimentation', desc:'Geological time compressed into visible strata; each band a century of accumulation.', x:10904, y:200, w:360, h:440, hue:[60,90], imgSrc:'' },
 ];
 
-/* ═══════════════════════════════════════════════════════
-   PLACEHOLDER IMAGE GENERATOR
-═══════════════════════════════════════════════════════ */
+/* ── PLACEHOLDER CANVAS ── */
 function makePlaceholderCanvas(w, h, hueRange, title) {
   const c = document.createElement('canvas');
-  c.width = w * 2; c.height = h * 2;
-  c.style.width = '100%'; c.style.height = '100%';
+  c.width = w*2; c.height = h*2;
+  c.style.width='100%'; c.style.height='100%';
   const ctx = c.getContext('2d');
-  const [h1, h2] = hueRange;
-
-  // gradient background
-  const g = ctx.createLinearGradient(0, 0, c.width, c.height);
-  g.addColorStop(0, `hsl(${h1},40%,10%)`);
-  g.addColorStop(.5, `hsl(${(h1+h2)/2},55%,16%)`);
-  g.addColorStop(1, `hsl(${h2},45%,8%)`);
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, c.width, c.height);
-
-  // noise overlay
-  for (let i = 0; i < 3000; i++) {
-    const x = Math.random() * c.width, y = Math.random() * c.height;
-    const a = Math.random() * .06;
-    ctx.fillStyle = `rgba(255,255,255,${a})`;
-    ctx.fillRect(x, y, 1, 1);
-  }
-
-  // geometric accent
-  ctx.save();
-  ctx.globalAlpha = .12;
-  ctx.strokeStyle = `hsl(${h1},70%,70%)`;
-  ctx.lineWidth = 1;
-  const cx = c.width/2, cy = c.height/2;
-  for (let r = 30; r < Math.max(c.width,c.height); r += 60) {
-    ctx.beginPath();
-    ctx.arc(cx + (Math.random()-.5)*80, cy + (Math.random()-.5)*80, r, 0, Math.PI*2);
-    ctx.stroke();
-  }
+  const [h1,h2] = hueRange;
+  const g = ctx.createLinearGradient(0,0,c.width,c.height);
+  g.addColorStop(0,`hsl(${h1},40%,10%)`);
+  g.addColorStop(.5,`hsl(${(h1+h2)/2},55%,16%)`);
+  g.addColorStop(1,`hsl(${h2},45%,8%)`);
+  ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height);
+  for(let i=0;i<3000;i++){const x=Math.random()*c.width,y=Math.random()*c.height;ctx.fillStyle=`rgba(255,255,255,${Math.random()*.06})`;ctx.fillRect(x,y,1,1);}
+  ctx.save();ctx.globalAlpha=.12;ctx.strokeStyle=`hsl(${h1},70%,70%)`;ctx.lineWidth=1;
+  const cx=c.width/2,cy=c.height/2;
+  for(let r=30;r<Math.max(c.width,c.height);r+=60){ctx.beginPath();ctx.arc(cx+(Math.random()-.5)*80,cy+(Math.random()-.5)*80,r,0,Math.PI*2);ctx.stroke();}
   ctx.restore();
-
-  // subtle label
-  ctx.save();
-  ctx.globalAlpha = .18;
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.min(w,h)*0.08}px Helvetica Neue, Arial`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(title.toUpperCase(), cx, cy);
-  ctx.restore();
-
+  ctx.save();ctx.globalAlpha=.18;ctx.fillStyle='#fff';ctx.font=`bold ${Math.min(w,h)*.08}px Helvetica Neue,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(title.toUpperCase(),cx,cy);ctx.restore();
   return c;
 }
 
-/* ═══════════════════════════════════════════════════════
-   IMAGE HELPER — returns <img> if imgSrc set, else canvas
-═══════════════════════════════════════════════════════ */
-function makeImage(w, h, item, cls) {
-  if (item.imgSrc) {
-    const img = document.createElement('img');
-    img.src = item.imgSrc;
-    img.className = cls;
-    img.draggable = false;
-    img.style.cssText = `width:100%;height:${h}px;object-fit:cover;display:block;`;
-    return img;
-  }
-  const c = makePlaceholderCanvas(w, h, item.hue || [200,240], item.title || '');
-  c.className = cls;
-  return c;
+function makeImage(w,h,item,cls){
+  if(item.imgSrc){const img=document.createElement('img');img.src=item.imgSrc;img.className=cls;img.draggable=false;img.style.cssText=`width:100%;height:${h}px;object-fit:cover;display:block;`;return img;}
+  const c=makePlaceholderCanvas(w,h,item.hue||[200,240],item.title||'');c.className=cls;return c;
+}
+function makeImageFromCell(w,h,cell,cls){
+  if(cell.imgSrc){const img=document.createElement('img');img.src=cell.imgSrc;img.className=cls;img.draggable=false;img.style.cssText=`width:100%;height:${h}px;object-fit:cover;display:block;`;return img;}
+  const c=makePlaceholderCanvas(w,h,cell.hue||[200,240],cell.title||'');c.className=cls;return c;
 }
 
-function makeImageFromCell(w, h, cell, cls) {
-  if (cell.imgSrc) {
-    const img = document.createElement('img');
-    img.src = cell.imgSrc;
-    img.className = cls;
-    img.draggable = false;
-    img.style.cssText = `width:100%;height:${h}px;object-fit:cover;display:block;`;
-    return img;
-  }
-  const c = makePlaceholderCanvas(w, h, cell.hue || [200,240], cell.title || '');
-  c.className = cls;
-  return c;
-}
+/* ── BUILD STUDIO ── */
 const studioCanvas = document.getElementById('studio-canvas');
 
-// Ambient glow pools
-const glowDefs = [
-  { x:1200, y:600, r:500, color:'rgba(123,156,255,0.07)' },
-  { x:3400, y:800, r:600, color:'rgba(200,169,110,0.06)' },
-  { x:5500, y:400, r:700, color:'rgba(180,100,200,0.05)' },
-  { x:7200, y:700, r:550, color:'rgba(80,200,150,0.05)' },
-  { x:9000, y:500, r:650, color:'rgba(123,156,255,0.06)' },
-  { x:11000,y:600, r:600, color:'rgba(200,169,110,0.05)' },
-  { x:13000,y:700, r:500, color:'rgba(180,100,200,0.06)' },
-];
-glowDefs.forEach(g => {
-  const el = document.createElement('div');
-  el.className = 'glow-pool';
-  el.style.cssText = `left:${g.x-g.r}px;top:${g.y-g.r}px;width:${g.r*2}px;height:${g.r*2}px;background:${g.color};`;
+[{x:1200,y:600,r:500,color:'rgba(123,156,255,0.07)'},{x:3400,y:800,r:600,color:'rgba(200,169,110,0.06)'},{x:5500,y:400,r:700,color:'rgba(180,100,200,0.05)'},{x:7200,y:700,r:550,color:'rgba(80,200,150,0.05)'},{x:9000,y:500,r:650,color:'rgba(123,156,255,0.06)'},{x:11000,y:600,r:600,color:'rgba(200,169,110,0.05)'}].forEach(g=>{
+  const el=document.createElement('div');el.className='glow-pool';
+  el.style.cssText=`left:${g.x-g.r}px;top:${g.y-g.r}px;width:${g.r*2}px;height:${g.r*2}px;background:${g.color};`;
   studioCanvas.appendChild(el);
 });
 
-// Opening Gallery title (no panels — title fills the space)
-const OG_LEFT = 200;
-const OG_RIGHT = 1560;
-const OG_CENTER_X = (OG_LEFT + OG_RIGHT) / 2;
+// Opening title
+const OG_CENTER_X = 880;
 const titleEl = document.createElement('div');
-titleEl.id = 'opening-title';
-titleEl.style.left = OG_CENTER_X + 'px';
-titleEl.style.top = '20%'; 
-titleEl.innerHTML = `
+titleEl.id='opening-title';
+titleEl.style.left=OG_CENTER_X+'px';
+titleEl.innerHTML=`
   <div class="title-line1">Animal Astronauts</div>
   <div class="title-line2"></div>
-  <div class="title-text-area">At the dawn of the space age, space was truly unknown territory. Little was known about the impact of spaceflight on living creatures. It was questionable if humans could even survive in the cold dark of space. Animal testing was seen as a necessary first step before human missions, and so humanities’ path to the stars began with animal pioneers.<br><br>“Without animal testing in the early days of the human space program, the Soviet and American programs could have suffered great losses of human life. These animals performed a service to their respective countries that no human could or would have performed. They gave their lives and/or their service in the name of technological advancement, paving the way for humanity’s many forays into space.”<br>--"A Brief History of Animals in Space," Tara Grey<br><br>These animal astronauts had no choice in the matter, but their successes and sometimes sacrifices were key to manned spaceflight. Dogs, primates, and even cats were used to demonstrate that living creatures could live and work in space, although questions remain over the ethics of using animals in testing that at times was guaranteed to be fatal or purely politically motivated. Once spaceflight was proven to be safe for humans, scientific experiments using smaller animals such as rats and turtles became the norm. Humans and animals continue to form a partnership in space exploration, as animals and humans both brave the dangers of the final frontier. This exhibit highlights the history of animals in space and the mission of three animal astronauts: Russian dog Laika, French cat Félicette, and American chimp Ham.<br><br>This exhibit contains images and descriptions that may be disturbing to some visitors.</div>
+  <div class="title-text-area">At the dawn of the space age, space was truly unknown territory. Little was known about the impact of spaceflight on living creatures. It was questionable if humans could even survive in the cold dark of space. Animal testing was seen as a necessary first step before human missions, and so humanity's path to the stars began with animal pioneers.<br><br>"Without animal testing in the early days of the human space program, the Soviet and American programs could have suffered great losses of human life. These animals performed a service to their respective countries that no human could or would have performed. They gave their lives and/or their service in the name of technological advancement, paving the way for humanity's many forays into space."<br>— "A Brief History of Animals in Space," Tara Grey<br><br>These animal astronauts had no choice in the matter, but their successes and sometimes sacrifices were key to manned spaceflight. This exhibit highlights three animal astronauts: Russian dog Laika, French cat Félicette, and American chimp Ham.<br><br>This exhibit contains images and descriptions that may be disturbing to some visitors.</div>
 `;
 studioCanvas.appendChild(titleEl);
 
-// Opening Gallery section label
-const ogLbl = document.createElement('div');
-ogLbl.className = 'section-label';
-ogLbl.textContent = 'Opening Gallery';
-ogLbl.style.left = OG_CENTER_X + 'px';
-studioCanvas.appendChild(ogLbl);
-
-// Opening Gallery closing divider
-const ogDiv = document.createElement('div');
-ogDiv.className = 'section-divider';
-ogDiv.style.left = OG_RIGHT + 'px';
-studioCanvas.appendChild(ogDiv);
+const ogDiv=document.createElement('div');ogDiv.className='section-divider';ogDiv.style.left='1560px';studioCanvas.appendChild(ogDiv);
+const ogLbl=document.createElement('div');ogLbl.className='section-label';ogLbl.textContent='Opening Gallery';ogLbl.style.left=OG_CENTER_X+'px';studioCanvas.appendChild(ogLbl);
 
 // Minimap dots
-const sections = [...new Set(EXHIBIT_DATA.map(d => d.section))];
-const mmDots = document.getElementById('minimap-dots');
-sections.forEach(() => {
-  const d = document.createElement('div');
-  d.className = 'mm-dot';
-  mmDots.appendChild(d);
-});
+const sections=[...new Set(EXHIBIT_DATA.map(d=>d.section))];
+const mmDots=document.getElementById('minimap-dots');
+sections.forEach(()=>{const d=document.createElement('div');d.className='mm-dot';mmDots.appendChild(d);});
 
-// Panels
-const panels = [];
-const panelEls = {};          // title → { el, item } map for anchoring
-const itemEls  = new Map();   // item  → DOM element (used for section labels)
-let archiveTitleEl = null;
-let archiveGridEl  = null;
+// Panel registry
+const panels=[];
+const panelEls={};
+const itemEls=new Map();
+let archiveTitleEl=null, archiveGridEl=null;
 
-EXHIBIT_DATA.forEach((item, idx) => {
+EXHIBIT_DATA.forEach(item=>{
 
-  if (item.archiveTitle) {
-    /* ── ARCHIVE TITLE PANEL ── */
-    const panel = document.createElement('div');
-    panel.className = 'panel-archive-title';
-    panel.style.cssText = `left:${item.x}px;top:${item.y}px;`;
-    panel.innerHTML = `
-      <div class="panel-tag">${item.tag}</div>
-      <div class="panel-title">${item.title}</div>
-      <div class="text-rule"></div>
-      <div class="panel-sub">${item.desc}</div>
-    `;
-    studioCanvas.appendChild(panel);
-    panels.push(panel);
-    archiveTitleEl = panel;
-    panelEls['Archive Title'] = { el: panel, item };
-    itemEls.set(item, panel);
+  if(item.archiveTitle){
+    const panel=document.createElement('div');
+    panel.className='panel-archive-title';
+    panel.style.cssText=`left:${item.x}px;top:${item.y}px;`;
+    panel.innerHTML=`<div class="panel-tag">${esc(item.tag)}</div><div class="panel-title">${esc(item.title)}</div><div class="text-rule"></div><div class="panel-sub">${item.desc}</div>`;
+    studioCanvas.appendChild(panel);panels.push(panel);
+    archiveTitleEl=panel;
+    panelEls['Archive Title']={el:panel,item};
+    itemEls.set(item,panel);
 
-  } else if (item.gridSection) {
-    /* ── ARCHIVE GRID ── */
-    const grid = document.createElement('div');
-    grid.className = 'archive-grid';
-    grid.style.cssText = `left:0px;top:160px;`;
-
-    item.items.forEach(cell => {
-      const cellEl = document.createElement('div');
-      cellEl.className = 'archive-cell';
-
-      const ph = makeImageFromCell(280, 187, cell, 'archive-cell-img');
-      ph.style.width = '100%';
-      ph.style.height = 'auto';
-      ph.style.aspectRatio = '3/2';
+  } else if(item.gridSection){
+    const grid=document.createElement('div');
+    grid.className='archive-grid';
+    grid.style.cssText='left:0px;top:200px;visibility:hidden;';
+    item.items.forEach(cell=>{
+      const cellEl=document.createElement('div');cellEl.className='archive-cell';
+      const ph=makeImageFromCell(280,187,cell,'archive-cell-img');
+      ph.style.cssText='width:100%;aspect-ratio:3/2;height:auto;display:block;object-fit:cover;flex-shrink:0;';
       cellEl.appendChild(ph);
-
-      const meta = document.createElement('div');
-      meta.className = 'archive-cell-meta';
-      meta.innerHTML = `
-        <div class="archive-cell-tag">${cell.tag}</div>
-        <div class="archive-cell-title">${cell.title}</div>
-        <div class="archive-cell-desc">${cell.desc}</div>
-      `;
-      cellEl.appendChild(meta);
-      grid.appendChild(cellEl);
+      const meta=document.createElement('div');meta.className='archive-cell-meta';
+      meta.innerHTML=`<div class="archive-cell-tag">${esc(cell.tag)}</div><div class="archive-cell-title">${esc(cell.title)}</div><div class="archive-cell-desc">${esc(cell.desc)}</div>`;
+      cellEl.appendChild(meta);grid.appendChild(cellEl);
     });
+    studioCanvas.appendChild(grid);archiveGridEl=grid;
+    itemEls.set(item,grid);
 
-    studioCanvas.appendChild(grid);
-    archiveGridEl = grid;
-    itemEls.set(item, grid);
+  } else if(item.textOnly){
+    const panel=document.createElement('div');
+    panel.className='panel-text';
+    panel.style.cssText=`left:${item.x}px;top:${item.y}px;`;
+    panel.innerHTML=`<div class="panel-tag">${esc(item.tag)}</div><div class="panel-title">${esc(item.title)}</div><div class="text-rule"></div><div class="panel-sub">${item.desc}</div>`;
+    studioCanvas.appendChild(panel);panels.push(panel);
+    panelEls[item.title]={el:panel,item};
+    itemEls.set(item,panel);
 
-  } else if (item.textOnly) {
-    /* ── TEXT-ONLY PANEL ── */
-    const panel = document.createElement('div');
-    panel.className = 'panel-text';
-    panel.style.cssText = `left:${item.x}px;top:${item.y}px;`;
-    panel.innerHTML = `
-      <div class="panel-tag">${item.tag}</div>
-      <div class="panel-title">${item.title}</div>
-      <div class="text-rule"></div>
-      <div class="panel-sub">${item.desc}</div>
-    `;
-    studioCanvas.appendChild(panel);
-    panels.push(panel);
-    panelEls[item.title] = { el: panel, item };
-    itemEls.set(item, panel);
-
-  } else if (item.anchoredTo && item.quadGrid) {
-    /* ── ANCHORED 2×2 QUAD GRID ── */
-    const cs = item.cellSize || 220;
-    const totalSize = cs * 2 + 12; // 2 cells + 1 gap
-    const grid = document.createElement('div');
-    grid.className = 'quad-grid';
-    grid.style.cssText = `left:0px;top:${item.relY}px;--cell-size:${cs}px;`;
-
-    item.cells.forEach(cell => {
-      const cellEl = document.createElement('div');
-      cellEl.className = 'quad-cell';
-
+  } else if(item.anchoredTo && item.quadGrid){
+    const cs=item.cellSize||220;
+    const grid=document.createElement('div');
+    grid.className='quad-grid';
+    grid.style.cssText=`left:0px;top:${item.relY}px;--cell-size:${cs}px;`;
+    item.cells.forEach(cell=>{
+      const cellEl=document.createElement('div');cellEl.className='quad-cell';
       let imgEl;
-      if (cell.imgSrc) {
-        imgEl = document.createElement('img');
-        imgEl.src = cell.imgSrc;
-        imgEl.draggable = false;
-        imgEl.className = 'quad-cell-img';
-        imgEl.style.height = cs + 'px';
-      } else {
-        imgEl = makePlaceholderCanvas(cs, cs, cell.hue, cell.title);
-        imgEl.className = 'quad-cell-img';
-        imgEl.style.width = '100%';
-        imgEl.style.height = cs + 'px';
-        imgEl.style.display = 'block';
-      }
+      if(cell.imgSrc){imgEl=document.createElement('img');imgEl.src=cell.imgSrc;imgEl.draggable=false;imgEl.className='quad-cell-img';imgEl.style.height=cs+'px';}
+      else{imgEl=makePlaceholderCanvas(cs,cs,cell.hue,cell.title);imgEl.className='quad-cell-img';imgEl.style.cssText=`width:100%;height:${cs}px;display:block;`;}
       cellEl.appendChild(imgEl);
-
-      const meta = document.createElement('div');
-      meta.className = 'quad-cell-meta';
-      meta.innerHTML = `
-        <div class="quad-cell-title">${cell.title}</div>
-        <div class="quad-cell-desc">${cell.desc}</div>
-      `;
-      cellEl.appendChild(meta);
-      grid.appendChild(cellEl);
+      const meta=document.createElement('div');meta.className='quad-cell-meta';
+      meta.innerHTML=`<div class="quad-cell-title">${esc(cell.title)}</div><div class="quad-cell-desc">${esc(cell.desc)}</div>`;
+      cellEl.appendChild(meta);grid.appendChild(cellEl);
     });
+    studioCanvas.appendChild(grid);panels.push(grid);
+    panelEls[item.title]={el:grid,item,isQuad:true,totalSize:cs*2+12};
+    itemEls.set(item,grid);
 
-    studioCanvas.appendChild(grid);
-    panels.push(grid);
-    panelEls[item.title] = { el: grid, item, isQuad: true, totalSize };
-    itemEls.set(item, grid);
+  } else if('videoSrc' in item){
+    const panel=document.createElement('div');
+    panel.className='panel-video';
+    panel.style.cssText=`left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
+    const videoWrap=document.createElement('div');
+    videoWrap.className='panel-video-wrap';
+    videoWrap.style.height=(item.h-80)+'px';
+    videoWrap.addEventListener('wheel',e=>{scrollX+=e.deltaY+e.deltaX;applyScroll();e.preventDefault();},{passive:false});
 
-  } else if (item.anchoredTo) {
-    /* ── ANCHORED PANEL (position set after render) ── */
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    panel.style.cssText = `left:0px;top:${item.relY}px;width:${item.w}px;height:${item.h}px;visibility:hidden;`;
-
-    const ph = makeImage(item.w, item.h - 80, item, 'panel-img-placeholder');
-    panel.appendChild(ph);
-
-    const meta = document.createElement('div');
-    meta.className = 'panel-meta';
-    meta.innerHTML = `<div class="panel-tag">${item.tag}</div><div class="panel-title">${item.title}</div><div class="panel-sub">${item.desc}</div>`;
-    panel.appendChild(meta);
-
-    studioCanvas.appendChild(panel);
-    panels.push(panel);
-    panelEls[item.title] = { el: panel, item };
-    itemEls.set(item, panel);
-
-  } else if ('videoSrc' in item) {
-    /* ── VIDEO PLAYER PANEL (autoplay · muted · loop) ── */
-    const panel = document.createElement('div');
-    panel.className = 'panel-video';
-    panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
- 
-    const videoWrap = document.createElement('div');
-    videoWrap.className = 'panel-video-wrap';
-    videoWrap.style.height = (item.h - 80) + 'px';
-
-    // Forward wheel events from video panel up to the viewport scroller
-    videoWrap.addEventListener('wheel', e => {
-      scrollX += e.deltaY + e.deltaX;
-      applyScroll();
-      e.preventDefault();
-    }, { passive: false });
- 
-    if (item.videoSrc) {
-      const vid = document.createElement('video');
-      // Muted + playsinline are required by browsers for autoplay
-      vid.muted = true;
-      vid.defaultMuted = true;
-      vid.setAttribute('muted', '');
-      vid.autoplay = true;
-      vid.setAttribute('autoplay', '');
-      vid.loop = true;
-      vid.setAttribute('loop', '');
-      vid.playsInline = true;
-      vid.setAttribute('playsinline', '');
-      vid.preload = 'auto';
-      vid.src = item.videoSrc;           // loaded from the online videos/ folder
+    if(item.videoSrc){
+      const vid=document.createElement('video');
+      vid.src=item.videoSrc;
+      vid.loop=true;
+      vid.playsInline=true;
+      vid.preload='metadata';
+      vid.muted=true;
+      // NOTE: pointer-events left as default so clicking the video wrap toggles play
       videoWrap.appendChild(vid);
 
-      // Start playback now, and retry once data is available
-      const tryPlay = () => {
-        const p = vid.play();
-        if (p && p.catch) p.catch(() => {});
-      };
-      tryPlay();
-      vid.addEventListener('loadeddata', tryPlay);
-      vid.addEventListener('canplay', tryPlay);
- 
-      const controls = document.createElement('div');
-      controls.className = 'panel-video-controls';
-      const playBtn = document.createElement('button');
-      playBtn.className = 'vp-play';
-      playBtn.innerHTML = '⏸';           // starts playing, so show pause
-      const progress = document.createElement('div');
-      progress.className = 'vp-progress';
-      const fill = document.createElement('div');
-      fill.className = 'vp-progress-fill';
-      progress.appendChild(fill);
-      const timeEl = document.createElement('span');
-      timeEl.className = 'vp-time';
-      timeEl.textContent = '0:00';
-      const muteBtn = document.createElement('button');
-      muteBtn.className = 'vp-mute';
-      muteBtn.innerHTML = '🔇';
- 
-      playBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        vid.paused ? vid.play() : vid.pause();
+      // Click the wrap to toggle play/pause
+      let playing=false;
+      videoWrap.addEventListener('click',e=>{
+        if(e.target.closest('.panel-video-controls')) return;
+        playing=!playing;
+        playing ? vid.play() : vid.pause();
+        playBtn.innerHTML=playing?'⏸':'▶';
       });
-      vid.addEventListener('play',  () => { playBtn.innerHTML = '⏸'; });
-      vid.addEventListener('pause', () => { playBtn.innerHTML = '▶'; });
 
-      muteBtn.addEventListener('click', e => {
+      const controls=document.createElement('div');controls.className='panel-video-controls';
+      const playBtn=document.createElement('button');playBtn.className='vp-play';playBtn.innerHTML='▶';
+      const prog=document.createElement('div');prog.className='vp-progress';
+      const fill=document.createElement('div');fill.className='vp-progress-fill';prog.appendChild(fill);
+      const timeEl=document.createElement('span');timeEl.className='vp-time';timeEl.textContent='0:00';
+      const muteBtn=document.createElement('button');muteBtn.className='vp-mute';muteBtn.innerHTML='🔇';
+
+      playBtn.addEventListener('click',e=>{
         e.stopPropagation();
-        vid.muted = !vid.muted;
-        muteBtn.innerHTML = vid.muted ? '🔇' : '🔊';
+        playing=!playing;
+        playing ? vid.play() : vid.pause();
+        playBtn.innerHTML=playing?'⏸':'▶';
       });
-      vid.addEventListener('timeupdate', () => {
-        if (!vid.duration) return;
-        fill.style.width = (vid.currentTime / vid.duration * 100) + '%';
-        const m = Math.floor(vid.currentTime / 60);
-        const s = Math.floor(vid.currentTime % 60).toString().padStart(2, '0');
-        timeEl.textContent = `${m}:${s}`;
-      });
-      progress.addEventListener('click', e => {
+      muteBtn.addEventListener('click',e=>{
         e.stopPropagation();
-        const rect = progress.getBoundingClientRect();
-        vid.currentTime = ((e.clientX - rect.left) / rect.width) * vid.duration;
+        vid.muted=!vid.muted;
+        muteBtn.innerHTML=vid.muted?'🔇':'🔊';
       });
- 
-      controls.appendChild(playBtn);
-      controls.appendChild(progress);
-      controls.appendChild(timeEl);
-      controls.appendChild(muteBtn);
+      vid.addEventListener('timeupdate',()=>{
+        if(!vid.duration)return;
+        fill.style.width=(vid.currentTime/vid.duration*100)+'%';
+        const m=Math.floor(vid.currentTime/60),s=Math.floor(vid.currentTime%60).toString().padStart(2,'0');
+        timeEl.textContent=`${m}:${s}`;
+      });
+      prog.addEventListener('click',e=>{
+        e.stopPropagation();
+        const r=prog.getBoundingClientRect();
+        vid.currentTime=((e.clientX-r.left)/r.width)*vid.duration;
+      });
+      controls.appendChild(playBtn);controls.appendChild(prog);controls.appendChild(timeEl);controls.appendChild(muteBtn);
       videoWrap.appendChild(controls);
- 
     } else {
-      const ph = document.createElement('div');
-      ph.className = 'panel-video-placeholder';
-      ph.innerHTML = `
-        <div class="vp-icon">▶</div>
-        <div class="vp-label">Add video via videoSrc</div>
-      `;
+      const ph=document.createElement('div');ph.className='panel-video-placeholder';
+      ph.innerHTML='<div class="vp-icon">▶</div><div class="vp-label">Add video via videoSrc</div>';
       videoWrap.appendChild(ph);
     }
- 
     panel.appendChild(videoWrap);
- 
-    const meta = document.createElement('div');
-    meta.className = 'panel-meta';
-    meta.innerHTML = `<div class="panel-tag">${esc(item.tag)}</div><div class="panel-title">${esc(item.title)}</div><div class="panel-sub">${esc(item.desc)}</div>`;
+    const meta=document.createElement('div');meta.className='panel-meta';
+    meta.innerHTML=`<div class="panel-tag">${esc(item.tag)}</div><div class="panel-title">${esc(item.title)}</div><div class="panel-sub">${esc(item.desc)}</div>`;
     panel.appendChild(meta);
- 
-    studioCanvas.appendChild(panel);
-    panels.push(panel);
-    panelEls[item.title] = { el: panel, item };
-    itemEls.set(item, panel);
-    
+    studioCanvas.appendChild(panel);panels.push(panel);
+    panelEls[item.title]={el:panel,item};
+    itemEls.set(item,panel);
+
   } else {
-    /* ── STANDARD IMAGE PANEL ── */
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    panel.style.cssText = `left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
-
-    const ph = makeImage(item.w, item.h - 80, item, 'panel-img-placeholder');
+    const panel=document.createElement('div');
+    panel.className='panel';
+    panel.style.cssText=`left:${item.x}px;top:${item.y}px;width:${item.w}px;height:${item.h}px;`;
+    const ph=makeImage(item.w,item.h-80,item,'panel-img-placeholder');
     panel.appendChild(ph);
-
-    const meta = document.createElement('div');
-    meta.className = 'panel-meta';
-    meta.innerHTML = `<div class="panel-tag">${item.tag}</div><div class="panel-title">${item.title}</div><div class="panel-sub">${item.desc}</div>`;
+    const meta=document.createElement('div');meta.className='panel-meta';
+    meta.innerHTML=`<div class="panel-tag">${esc(item.tag)}</div><div class="panel-title">${esc(item.title)}</div><div class="panel-sub">${esc(item.desc)}</div>`;
     panel.appendChild(meta);
-
-    studioCanvas.appendChild(panel);
-    panels.push(panel);
-    panelEls[item.title] = { el: panel, item };
-    itemEls.set(item, panel);
+    studioCanvas.appendChild(panel);panels.push(panel);
+    panelEls[item.title]={el:panel,item};
+    itemEls.set(item,panel);
   }
 });
 
-/* ── ANCHOR POSITIONING ─────────────────────────────── */
-function resolvedRight(title) {
-  const entry = panelEls[title];
-  if (!entry) return 0;
-  const { el, item } = entry;
-  const left = parseFloat(el.style.left) || 0;
-  if (item.textOnly) return left + el.offsetWidth;
-  if (entry.isQuad) return left + entry.totalSize;
-  return left + (item.w || 0);
+/* ── ANCHOR + LAYOUT ── */
+function resolvedRight(title){
+  const e=panelEls[title];if(!e)return 0;
+  const left=parseFloat(e.el.style.left)||0;
+  if(e.item.textOnly||e.item.archiveTitle)return left+e.el.offsetWidth;
+  if(e.isQuad)return left+e.totalSize;
+  return left+(e.item.w||0);
 }
 
-function repositionAnchored() {
-  // Process in data order so each anchor is resolved before its dependents
-  EXHIBIT_DATA.forEach(item => {
-    if (!item.anchoredTo) return;
-    const entry = panelEls[item.title];
-    if (!entry) return;
-
-    const newLeft = resolvedRight(item.anchoredTo) + (item.gap || 0);
-    entry.el.style.left = newLeft + 'px';
-    entry.el.style.visibility = 'visible';
+function repositionAnchored(){
+  EXHIBIT_DATA.forEach(item=>{
+    if(!item.anchoredTo)return;
+    const entry=panelEls[item.title];if(!entry)return;
+    const newLeft=resolvedRight(item.anchoredTo)+(item.gap||0);
+    entry.el.style.left=newLeft+'px';
+    entry.el.style.visibility='visible';
   });
 
-  // ── Archive grid: position beside the archive title panel ──
-  if (archiveTitleEl && archiveGridEl) {
-    const titleLeft = parseFloat(archiveTitleEl.style.left) || 0;
-    const titleW    = archiveTitleEl.offsetWidth;
-    const titleTop  = parseFloat(archiveTitleEl.style.top) || 200;
-
-    archiveGridEl.style.left = (titleLeft + titleW + 20) + 'px';
-    archiveGridEl.style.top  = titleTop + 'px';
-    archiveGridEl.style.visibility = 'visible';
-
-    const imgH = 187; // 3:2 at 280px width
-    archiveGridEl.querySelectorAll('.archive-cell-img').forEach(imgEl => {
-      imgEl.style.height = imgH + 'px';
-    });
+  // Archive grid beside title
+  if(archiveTitleEl&&archiveGridEl){
+    const tLeft=parseFloat(archiveTitleEl.style.left)||0;
+    const tTop=parseFloat(archiveTitleEl.style.top)||200;
+    archiveGridEl.style.left=(tLeft+archiveTitleEl.offsetWidth+20)+'px';
+    archiveGridEl.style.top=tTop+'px';
+    archiveGridEl.style.visibility='visible';
   }
 
-  // ── Centre quad grids / size panels beside tall text panels ──
-  ['Félicette, France', 'Laika, Soviet Union', 'Ham, United States'].forEach(textTitle => {
-    const textEntry = panelEls[textTitle];
-    if (!textEntry) return;
-    const textTop = parseFloat(textEntry.el.style.top) || 200;
-    const textH   = textEntry.el.offsetHeight;
-    if (!textH) return;
-
-    EXHIBIT_DATA.forEach(item => {
-      if (item.anchoredTo !== textTitle) return;
-      const entry = panelEls[item.title];
-      if (!entry) return;
-
-      if (entry.isQuad) {
-        const quadH = entry.el.offsetHeight || (item.cellSize || 220) * 2 + 12;
-        const centredTop = textTop + Math.max(0, (textH - quadH) / 2);
-        entry.el.style.top = centredTop + 'px';
-        entry.el.style.visibility = 'visible';
-      } else {
-        entry.el.style.height = textH + 'px';
-        const imgEl = entry.el.querySelector('.panel-img-placeholder');
-        if (imgEl) imgEl.style.height = (textH - 80) + 'px';
+  // Centre quad grids beside their text panels
+  ['Félicette, France','Laika, Soviet Union','Ham, United States'].forEach(textTitle=>{
+    const te=panelEls[textTitle];if(!te)return;
+    const tTop=parseFloat(te.el.style.top)||200;
+    const tH=te.el.offsetHeight;if(!tH)return;
+    EXHIBIT_DATA.forEach(item=>{
+      if(item.anchoredTo!==textTitle)return;
+      const entry=panelEls[item.title];if(!entry)return;
+      if(entry.isQuad){
+        const qH=entry.el.offsetHeight||(item.cellSize||220)*2+12;
+        entry.el.style.top=(tTop+Math.max(0,(tH-qH)/2))+'px';
+        entry.el.style.visibility='visible';
       }
     });
   });
 }
 
-/* ── SECTION LABELS & DIVIDERS (measured from the real layout) ── */
-function buildSections() {
-  studioCanvas.querySelectorAll('.sec-auto').forEach(e => e.remove());
-
-  // Group consecutive items that share a section name
-  const runs = [];
-  EXHIBIT_DATA.forEach(item => {
-    const el = itemEls.get(item);
-    if (!el) return;
-    const left  = parseFloat(el.style.left) || 0;
-    const right = left + el.offsetWidth;
-    const last  = runs[runs.length - 1];
-    if (last && last.name === item.section) {
-      last.min = Math.min(last.min, left);
-      last.max = Math.max(last.max, right);
-    } else {
-      runs.push({ name: item.section, min: left, max: right });
-    }
+function buildSectionLabels(){
+  studioCanvas.querySelectorAll('.sec-auto').forEach(e=>e.remove());
+  const runs=[];
+  EXHIBIT_DATA.forEach(item=>{
+    const el=itemEls.get(item);if(!el)return;
+    const left=parseFloat(el.style.left)||0;
+    const right=left+(el.offsetWidth||item.w||400);
+    const last=runs[runs.length-1];
+    if(last&&last.name===item.section){last.min=Math.min(last.min,left);last.max=Math.max(last.max,right);}
+    else runs.push({name:item.section,min:left,max:right});
   });
-
-  runs.forEach((r, i) => {
-    if (i > 0) {
-      const div = document.createElement('div');
-      div.className = 'section-divider sec-auto';
-      div.style.left = (r.min - 40) + 'px';
-      studioCanvas.appendChild(div);
-    }
-    const lbl = document.createElement('div');
-    lbl.className = 'section-label sec-auto';
-    lbl.textContent = r.name;
-    lbl.style.left = (r.min + (r.max - r.min) / 2) + 'px';
-    studioCanvas.appendChild(lbl);
+  runs.forEach((r,i)=>{
+    if(i>0){const div=document.createElement('div');div.className='section-divider sec-auto';div.style.left=(r.min-40)+'px';studioCanvas.appendChild(div);}
+    const lbl=document.createElement('div');lbl.className='section-label sec-auto';lbl.textContent=r.name;lbl.style.left=(r.min+(r.max-r.min)/2)+'px';studioCanvas.appendChild(lbl);
   });
 }
 
-function relayout() {
-  repositionAnchored();
-  buildSections();
-}
-
-requestAnimationFrame(() => {
+function relayout(){repositionAnchored();buildSectionLabels();}
+requestAnimationFrame(()=>{
   relayout();
-
-  if (window.ResizeObserver) {
-    const ro = new ResizeObserver(() => relayout());
-    ['Félicette, France', 'Laika, Soviet Union', 'Ham, United States'].forEach(title => {
-      const entry = panelEls[title];
-      if (entry) ro.observe(entry.el);
+  if(window.ResizeObserver){
+    const ro=new ResizeObserver(()=>relayout());
+    ['Félicette, France','Laika, Soviet Union','Ham, United States','Archive Title'].forEach(t=>{
+      const e=panelEls[t];if(e)ro.observe(e.el);
     });
-    if (archiveTitleEl) ro.observe(archiveTitleEl);
+    if(archiveTitleEl)ro.observe(archiveTitleEl);
   }
 });
-window.addEventListener('load', relayout);
+window.addEventListener('load',relayout);
 
-/* ═══════════════════════════════════════════════════════
-   PANNING / SCROLLING
-═══════════════════════════════════════════════════════ */
-const viewport = document.getElementById('studio-viewport');
-let scrollX = 0;
-const thumbEl = document.getElementById('minimap-thumb');
-const angleEl = document.getElementById('angle-readout');
-
-function getMaxScroll() { return Math.max(0, CANVAS_W - window.innerWidth); }
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-function applyScroll() {
-  const maxScroll = getMaxScroll();
-  scrollX = clamp(scrollX, 0, maxScroll);
-  studioCanvas.style.transform = `translateY(-50%) translateX(${-scrollX}px)`;
-  const ratio = maxScroll ? scrollX / maxScroll : 0;
-  const thumbW = Math.min(200, (window.innerWidth / CANVAS_W) * 200);
-  thumbEl.style.width = thumbW + 'px';
-  thumbEl.style.left = ratio * (200 - thumbW) + 'px';
-  angleEl.textContent = Math.round(ratio * DEGREES) + '°';
+/* ── SCROLL ── */
+const viewport=document.getElementById('studio-viewport');
+let scrollX=0;
+const thumbEl=document.getElementById('minimap-thumb');
+const angleEl=document.getElementById('angle-readout');
+function getMax(){return Math.max(0,CANVAS_W-window.innerWidth);}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function applyScroll(){
+  const max=getMax();scrollX=clamp(scrollX,0,max);
+  studioCanvas.style.transform=`translateY(-50%) translateX(${-scrollX}px)`;
+  const ratio=max?scrollX/max:0;
+  const tw=Math.min(200,(window.innerWidth/CANVAS_W)*200);
+  thumbEl.style.width=tw+'px';thumbEl.style.left=ratio*(200-tw)+'px';
+  angleEl.textContent=Math.round(ratio*DEGREES)+'°';
 }
 applyScroll();
-window.addEventListener('resize', applyScroll);
+window.addEventListener('resize',applyScroll);
 
-// Mouse drag
-let isDragging = false, dragStartX = 0, dragStartScroll = 0;
-viewport.addEventListener('mousedown', e => {
-  isDragging = true;
-  dragStartX = e.clientX;
-  dragStartScroll = scrollX;
-  viewport.classList.add('dragging');
-  e.preventDefault();
-});
-window.addEventListener('mousemove', e => {
-  if (!isDragging) return;
-  scrollX = dragStartScroll - (e.clientX - dragStartX);
-  applyScroll();
-});
-window.addEventListener('mouseup', () => {
-  isDragging = false;
-  viewport.classList.remove('dragging');
-});
+let isDragging=false,dragStartX=0,dragStartScroll=0;
+viewport.addEventListener('mousedown',e=>{isDragging=true;dragStartX=e.clientX;dragStartScroll=scrollX;viewport.classList.add('dragging');e.preventDefault();});
+window.addEventListener('mousemove',e=>{if(!isDragging)return;scrollX=dragStartScroll-(e.clientX-dragStartX);applyScroll();});
+window.addEventListener('mouseup',()=>{isDragging=false;viewport.classList.remove('dragging');});
 
-// Touch
-let touchStartX = 0, touchStartScroll = 0;
-viewport.addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartScroll = scrollX;
-}, { passive: true });
-viewport.addEventListener('touchmove', e => {
-  scrollX = touchStartScroll - (e.touches[0].clientX - touchStartX);
-  applyScroll();
-  e.preventDefault();
-}, { passive: false });
+let touchStartX=0,touchStartScroll=0;
+viewport.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;touchStartScroll=scrollX;},{passive:true});
+viewport.addEventListener('touchmove',e=>{scrollX=touchStartScroll-(e.touches[0].clientX-touchStartX);applyScroll();e.preventDefault();},{passive:false});
 
-// Wheel
-viewport.addEventListener('wheel', e => {
-  scrollX += e.deltaY + e.deltaX;
-  applyScroll();
-  e.preventDefault();
-}, { passive: false });
-
-// Keyboard
-window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft')  scrollX -= 120;
-  if (e.key === 'ArrowRight') scrollX += 120;
-  applyScroll();
-});
-
-// Buttons
-document.getElementById('btn-left').addEventListener('click', () => { scrollX -= 400; applyScroll(); });
-document.getElementById('btn-right').addEventListener('click', () => { scrollX += 400; applyScroll(); });
+viewport.addEventListener('wheel',e=>{scrollX+=e.deltaY+e.deltaX;applyScroll();e.preventDefault();},{passive:false});
+window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')scrollX-=120;if(e.key==='ArrowRight')scrollX+=120;applyScroll();});
+document.getElementById('btn-left').addEventListener('click',()=>{scrollX-=400;applyScroll();});
+document.getElementById('btn-right').addEventListener('click',()=>{scrollX+=400;applyScroll();});
 </script>
 </body>
 </html>
