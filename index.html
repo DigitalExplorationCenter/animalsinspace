@@ -124,6 +124,16 @@
   #opening-title .title-line1 { font-family:'Orbitron','Courier New',monospace; font-size:62px; font-weight:900; letter-spacing:.18em; text-transform:uppercase; background:linear-gradient(135deg,#e8e4dc 0%,#c8a96e 45%,#7b9cff 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.1; filter:drop-shadow(0 0 32px rgba(123,156,255,0.35)); }
   #opening-title .title-line2 { font-family:'Orbitron','Courier New',monospace; font-size:28px; font-weight:400; letter-spacing:.42em; text-transform:uppercase; color:var(--accent); margin-top:14px; opacity:.9; filter:drop-shadow(0 0 18px rgba(200,169,110,0.4)); }
   #opening-title .title-text-area { margin-top:32px; max-width:900px; white-space:normal; text-align:center; font-family:'Helvetica Neue',Arial,sans-serif; font-size:18px; line-height:1.75; color:var(--text); opacity:.85; pointer-events:none; }
+
+  /* ── MUSIC PLAYER ── */
+  #music-player { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:100; display:flex; align-items:center; gap:10px; padding:6px 14px; background:var(--panel-bg); border:1px solid var(--border); border-radius:4px; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+  .mp-btn { width:30px; height:30px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:50%; color:var(--accent); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:background .15s,border-color .15s; }
+  .mp-btn:hover { background:rgba(200,169,110,.14); border-color:var(--accent); }
+  #mp-info { display:flex; flex-direction:column; width:170px; overflow:hidden; }
+  #mp-label { font-size:8px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
+  #mp-title { font-size:11px; letter-spacing:.06em; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #mp-vol { width:70px; height:3px; accent-color:var(--accent); cursor:pointer; }
+  @media (max-width:900px) { #music-player { bottom:84px; } }
 </style>
 </head>
 <body>
@@ -145,6 +155,17 @@
 <div id="controls">
   <button class="ctrl-btn" id="btn-left">&#8592;</button>
   <button class="ctrl-btn" id="btn-right">&#8594;</button>
+</div>
+
+<div id="music-player">
+  <button class="mp-btn" id="mp-prev" title="Previous">&#9198;</button>
+  <button class="mp-btn" id="mp-play" title="Play / Pause">&#9654;</button>
+  <button class="mp-btn" id="mp-next" title="Next">&#9197;</button>
+  <div id="mp-info">
+    <div id="mp-label">Now Playing</div>
+    <div id="mp-title">Loading…</div>
+  </div>
+  <input type="range" id="mp-vol" min="0" max="1" step="0.01" value="0.5" title="Volume">
 </div>
 
 <div id="studio-viewport">
@@ -538,6 +559,82 @@ viewport.addEventListener('wheel',e=>{scrollX+=e.deltaY+e.deltaX;applyScroll();e
 window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')scrollX-=120;if(e.key==='ArrowRight')scrollX+=120;applyScroll();});
 document.getElementById('btn-left').addEventListener('click',()=>{scrollX-=400;applyScroll();});
 document.getElementById('btn-right').addEventListener('click',()=>{scrollX+=400;applyScroll();});
+
+/* ── MUSIC PLAYER ── */
+const MUSIC_FOLDER = 'music/';
+const PLAYLIST = [
+  'holst_neptune.opus',
+  // add every file in your music/ folder here
+];
+const SHUFFLE = true;
+
+(function () {
+  const audio   = new Audio();
+  const playBtn = document.getElementById('mp-play');
+  const prevBtn = document.getElementById('mp-prev');
+  const nextBtn = document.getElementById('mp-next');
+  const mpTitle = document.getElementById('mp-title');
+  const volEl   = document.getElementById('mp-vol');
+
+  if (!PLAYLIST.length) { mpTitle.textContent = 'No tracks'; return; }
+
+  let order = PLAYLIST.map((_, i) => i);
+  if (SHUFFLE) {
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+  }
+  let pos = 0, failures = 0;
+
+  const prettyName = f => decodeURIComponent(f).replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+
+  function load(p) {
+    pos = (p + order.length) % order.length;
+    const file = PLAYLIST[order[pos]];
+    audio.src = MUSIC_FOLDER + encodeURIComponent(file).replace(/%2F/g, '/');
+    mpTitle.textContent = prettyName(file);
+  }
+
+  function play() {
+    return audio.play().then(() => { failures = 0; }).catch(() => {});
+  }
+
+  let savedVol = 0.5;
+  try { savedVol = parseFloat(localStorage.getItem('mpVol') ?? '0.5'); } catch (e) {}
+  audio.volume = isNaN(savedVol) ? 0.5 : savedVol;
+  volEl.value = audio.volume;
+  volEl.addEventListener('input', () => {
+    audio.volume = volEl.value;
+    try { localStorage.setItem('mpVol', volEl.value); } catch (e) {}
+  });
+
+  audio.addEventListener('play',  () => { playBtn.innerHTML = '&#10074;&#10074;'; });
+  audio.addEventListener('pause', () => { playBtn.innerHTML = '&#9654;'; });
+  audio.addEventListener('ended', () => { load(pos + 1); play(); });
+  audio.addEventListener('error', () => {
+    if (++failures >= PLAYLIST.length) { mpTitle.textContent = 'Tracks not found'; return; }
+    load(pos + 1); play();
+  });
+
+  playBtn.addEventListener('click', () => { audio.paused ? play() : audio.pause(); });
+  nextBtn.addEventListener('click', () => { load(pos + 1); play(); });
+  prevBtn.addEventListener('click', () => { load(pos - 1); play(); });
+
+  // Autoplay: try immediately; if the browser blocks it, start on first interaction
+  load(0);
+  audio.play().catch(() => {
+    mpTitle.textContent += '  (click anywhere to start)';
+    const events = ['pointerdown', 'keydown', 'touchend'];
+    const start = e => {
+      if (e.target.closest && e.target.closest('#music-player')) return; // let the buttons do their job
+      events.forEach(ev => window.removeEventListener(ev, start, true));
+      mpTitle.textContent = prettyName(PLAYLIST[order[pos]]);
+      play();
+    };
+    events.forEach(ev => window.addEventListener(ev, start, true));
+  });
+})();
 </script>
 </body>
 </html>
